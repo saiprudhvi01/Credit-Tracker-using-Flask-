@@ -113,9 +113,9 @@ HTML = '''
                 </div>
             </div>
             <div class="flex gap-1 md:gap-2 bg-gray-100 rounded-xl p-1">
-                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900%}">Dashboard</a>
-                <a href="/customers" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900%}">Customers</a>
-                <a href="/gmail_setup" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900%}">Gmail</a>
+                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">Dashboard</a>
+                <a href="/customers" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">Customers</a>
+                <a href="/gmail_setup" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">Gmail</a>
                 <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-all">Logout</a>
             </div>
         </nav>
