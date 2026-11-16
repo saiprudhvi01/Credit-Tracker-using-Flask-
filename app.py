@@ -402,47 +402,172 @@ ADD_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="max-w-xl mx-auto">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
-        <div class="text-center mb-8">
+        <div class="text-center mb-6">
             <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">📝</span>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Add Entry</h2>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Quick Entry</h2>
             <p class="text-gray-500 dark:text-gray-400 mt-1">Record credit or payment</p>
         </div>
-        <form method="POST">
-            <div class="mb-5">
+        
+        <div class="mb-4">
+            <button onclick="startVoiceInput()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                <span id="voiceIcon">🎤</span>
+                <span id="voiceText">Tap to Speak (e.g., "Ravi gave 500 credit")</span>
+            </button>
+        </div>
+
+        <form method="POST" id="transactionForm">
+            <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer</label>
-                <select name="customer_id" required class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                <select name="customer_id" id="customerSelect" required class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
                     <option value="">Select customer</option>
                     {% for c in customers %}
                     <option value="{{ c.id }}" {% if preselected == c.id|string %}selected{% endif %}>{{ c.name }} (Pending: ₹{{ c.pending }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="mb-5">
+            
+            <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💰 Type</label>
-                <select name="type" required class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
-                    <option value="credit">❌ Credit (they owe you)</option>
-                    <option value="payment">✅ Payment (they paid you)</option>
-                </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="type" value="credit" id="creditType" class="hidden peer" required>
+                        <div class="peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 rounded-xl p-4 text-center transition-all">
+                            <span class="text-2xl block mb-1">➖</span>
+                            <span class="font-semibold">Gave Credit</span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">They owe you</p>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="type" value="payment" id="paymentType" class="hidden peer">
+                        <div class="peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 rounded-xl p-4 text-center transition-all">
+                            <span class="text-2xl block mb-1">➕</span>
+                            <span class="font-semibold">Got Payment</span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">They paid you</p>
+                        </div>
+                    </label>
+                </div>
             </div>
-            <div class="mb-5">
+            
+            <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💵 Amount (₹)</label>
-                <input type="number" name="amount" placeholder="Enter amount" required min="1"
-                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                <input type="number" name="amount" id="amountInput" placeholder="Enter amount" required min="1"
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none text-2xl font-bold text-center">
+                <div class="grid grid-cols-4 gap-2 mt-3">
+                    <button type="button" onclick="setAmount(100)" class="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg py-2 font-semibold text-gray-700 dark:text-gray-300 transition-all">₹100</button>
+                    <button type="button" onclick="setAmount(500)" class="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg py-2 font-semibold text-gray-700 dark:text-gray-300 transition-all">₹500</button>
+                    <button type="button" onclick="setAmount(1000)" class="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg py-2 font-semibold text-gray-700 dark:text-gray-300 transition-all">₹1000</button>
+                    <button type="button" onclick="setAmount(2000)" class="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg py-2 font-semibold text-gray-700 dark:text-gray-300 transition-all">₹2000</button>
+                </div>
             </div>
+            
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📝 Note (optional)</label>
-                <input type="text" name="note" placeholder="Add a note"
+                <input type="text" name="note" id="noteInput" placeholder="Add a note"
                     class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
-            <button type="submit" class="w-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg mb-3">
-                📝 Add Entry
+            
+            <button type="submit" class="w-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg mb-3">
+                📝 Save Entry
             </button>
             <a href="/" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium">❌ Cancel</a>
         </form>
     </div>
 </div>
+
+<script>
+function setAmount(amount) {
+    document.getElementById('amountInput').value = amount;
+}
+
+let recognition;
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onstart = function() {
+        document.getElementById('voiceIcon').textContent = '🔴';
+        document.getElementById('voiceText').textContent = 'Listening...';
+    };
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        parseVoiceCommand(transcript);
+    };
+    
+    recognition.onend = function() {
+        document.getElementById('voiceIcon').textContent = '🎤';
+        document.getElementById('voiceText').textContent = 'Tap to Speak (e.g., "Ravi gave 500 credit")';
+    };
+    
+    recognition.onerror = function(event) {
+        document.getElementById('voiceIcon').textContent = '🎤';
+        document.getElementById('voiceText').textContent = 'Error: ' + event.error;
+    };
+}
+
+function startVoiceInput() {
+    if (recognition) {
+        recognition.start();
+    } else {
+        alert('Voice inputNot supported in this browser. Try Chrome.');
+    }
+}
+
+function parseVoiceCommand(text) {
+    const customerSelect = document.getElementById('customerSelect');
+    const amountInput = document.getElementById('amountInput');
+    const noteInput = document.getElementById('noteInput');
+    
+    let customerName = '';
+    let amount = '';
+    let type = '';
+    
+    const customers = Array.from(customerSelect.options).map(opt => opt.text.toLowerCase());
+    
+    for (const customer of customers) {
+        if (text.includes(customer.split(' (')[0])) {
+            customerName = customer.split(' (')[0];
+            break;
+        }
+    }
+    
+    const amountMatch = text.match(/(\d+)/);
+    if (amountMatch) {
+        amount = amountMatch[1];
+    }
+    
+    if (text.includes('credit') || text.includes('gave') || text.includes('owe')) {
+        type = 'credit';
+    } else if (text.includes('payment') || text.includes('paid') || text.includes('got')) {
+        type = 'payment';
+    }
+    
+    if (customerName) {
+        for (let i = 0; i < customerSelect.options.length; i++) {
+            if (customerSelect.options[i].text.toLowerCase().includes(customerName)) {
+                customerSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    
+    if (amount) {
+        amountInput.value = amount;
+    }
+    
+    if (type === 'credit') {
+        document.getElementById('creditType').checked = true;
+    } else if (type === 'payment') {
+        document.getElementById('paymentType').checked = true;
+    }
+    
+    noteInput.value = text;
+}
+</script>
 ''')
 
 CUSTOMER_DETAIL_HTML = HTML.replace('{% block content %}{% endblock %}', '''
