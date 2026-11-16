@@ -77,6 +77,18 @@ HTML = '''
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -85,24 +97,34 @@ HTML = '''
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .stat-card { background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); }
-        .pulse-red { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .dark .stat-card { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
+        .dark .bg-white { background-color: #1e293b !important; }
+        .dark .bg-gray-50 { background-color: #0f172a !important; }
+        .dark .bg-gray-100 { background-color: #334155 !important; }
+        .dark .text-gray-800 { color: #f1f5f9 !important; }
+        .dark .text-gray-500 { color: #94a3b8 !important; }
+        .dark .text-gray-600 { color: #cbd5e1 !important; }
+        .dark .text-gray-700 { color: #e2e8f0 !important; }
+        .dark .border-gray-100 { border-color: #334155 !important; }
+        .dark .border-gray-200 { border-color: #475569 !important; }
+        .dark .from-gray-50 { --tw-gradient-from: #0f172a !important; }
+        .dark .to-white { --tw-gradient-to: #1e293b !important; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 min-h-screen transition-colors duration-300">
+    <div id="loading" class="fixed inset-0 bg-white dark:bg-slate-900 flex items-center justify-center z-50">
         <div class="text-center">
             <div class="relative">
                 <div class="animate-spin rounded-full h-20 w-20 border-4 border-purple-200"></div>
                 <div class="animate-spin rounded-full h-20 w-20 border-4 border-purple-600 border-t-transparent absolute top-0 left-0"></div>
             </div>
-            <p class="mt-6 text-gray-600 font-medium">Loading your shop...</p>
+            <p class="mt-6 text-gray-600 dark:text-gray-400 font-medium">Loading your shop...</p>
         </div>
     </div>
     
     <div class="max-w-6xl mx-auto p-4 md:p-8">
         {% if session.user_id %}
-        <nav class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-4 md:p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 fade-in">
+        <nav class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-lg p-4 md:p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 fade-in">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,14 +133,17 @@ HTML = '''
                 </div>
                 <div>
                     <h1 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Ravi's Shop</h1>
-                    <p class="text-xs text-gray-500">Credit Tracker</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Credit Tracker</p>
                 </div>
             </div>
-            <div class="flex gap-1 md:gap-2 bg-gray-100 rounded-xl p-1">
-                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">📊 Dashboard</a>
-                <a href="/customers" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">👥 Customers</a>
-                <a href="/gmail_setup" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white shadow text-purple-600{% else %}text-gray-600 hover:text-gray-900{% endif %}">📧 Gmail</a>
-                <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-all">🚪 Logout</a>
+            <div class="flex gap-1 md:gap-2 bg-gray-100 dark:bg-slate-700 rounded-xl p-1">
+                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📊 Dashboard</a>
+                <a href="/customers" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">👥 Customers</a>
+                <a href="/gmail_setup" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📧 Gmail</a>
+                <button onclick="toggleDarkMode()" class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                    🌙/☀️
+                </button>
+                <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">🚪 Logout</a>
             </div>
         </nav>
         {% endif %}
@@ -127,6 +152,13 @@ HTML = '''
     </div>
 
     <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
         setTimeout(() => {
             const loading = document.getElementById('loading');
             loading.style.opacity = '0';
@@ -140,32 +172,30 @@ HTML = '''
 
 LOGIN_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="flex items-center justify-center min-h-[80vh]">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md fade-in card-hover">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md fade-in card-hover">
         <div class="text-center mb-8">
             <div class="w-20 h-20 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
+                <span class="text-4xl">👤</span>
             </div>
             <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Welcome Back</h2>
-            <p class="text-gray-500 mt-2">Sign in to manage your shop</p>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">Sign in to manage your shop</p>
         </div>
         {% if message %}
-        <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 flex items-center gap-3">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+        <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-xl mb-6 flex items-center gap-3">
+            <span class="text-xl">⚠️</span>
             {{ message }}
         </div>
         {% endif %}
         <form method="POST">
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Username</label>
                 <input type="text" name="username" placeholder="Enter username" required
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Password</label>
                 <input type="password" name="password" placeholder="Enter password" required
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <button type="submit" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg">
                 Sign In
@@ -177,30 +207,30 @@ LOGIN_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 
 HOME_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in">
-    <div class="stat-card rounded-2xl shadow-lg p-6 card-hover border border-gray-100">
+    <div class="stat-card dark:bg-slate-800 rounded-2xl shadow-lg p-6 card-hover border border-gray-100 dark:border-slate-700">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">👥 Total Customers</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">👥 Total Customers</p>
                 <p class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{{ total_customers }}</p>
-                <p class="text-xs text-gray-400 mt-1">Registered in your shop</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Registered in your shop</p>
             </div>
-            <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
+            <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center">
                 <span class="text-3xl">👥</span>
             </div>
         </div>
     </div>
-    <div class="stat-card rounded-2xl shadow-lg p-6 card-hover border border-gray-100 {% if total_pending > 0 %}ring-2 ring-red-200{% endif %}">
+    <div class="stat-card dark:bg-slate-800 rounded-2xl shadow-lg p-6 card-hover border border-gray-100 dark:border-slate-700 {% if total_pending > 0 %}ring-2 ring-red-200 dark:ring-red-800{% endif %}">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">💰 Total Pending</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">💰 Total Pending</p>
                 <p class="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">₹{{ total_pending }}</p>
                 {% if total_pending > 0 %}
-                <p class="text-xs text-red-500 mt-1 font-medium">⚠️ Money to collect</p>
+                <p class="text-xs text-red-500 dark:text-red-400 mt-1 font-medium">⚠️ Money to collect</p>
                 {% else %}
-                <p class="text-xs text-green-500 mt-1 font-medium">✅ All settled!</p>
+                <p class="text-xs text-green-500 dark:text-green-400 mt-1 font-medium">✅ All settled!</p>
                 {% endif %}
             </div>
-            <div class="w-14 h-14 {% if total_pending > 0 %}bg-red-100{% else %}bg-green-100{% endif %} rounded-2xl flex items-center justify-center">
+            <div class="w-14 h-14 {% if total_pending > 0 %}bg-red-100 dark:bg-red-900/50{% else %}bg-green-100 dark:bg-green-900/50{% endif %} rounded-2xl flex items-center justify-center">
                 <span class="text-3xl">{% if total_pending > 0 %}💸{% else %}✅{% endif %}</span>
             </div>
         </div>
@@ -208,43 +238,43 @@ HOME_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <a href="/add_customer" class="bg-white rounded-2xl shadow-lg p-6 card-hover border border-gray-100 flex items-center gap-4 group">
+    <a href="/add_customer" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 card-hover border border-gray-100 dark:border-slate-700 flex items-center gap-4 group">
         <div class="w-14 h-14 gradient-bg rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
             <span class="text-3xl">➕</span>
         </div>
         <div>
-            <h3 class="text-lg font-bold text-gray-800">Add Customer</h3>
-            <p class="text-sm text-gray-500">Register a new customer</p>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Add Customer</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Register a new customer</p>
         </div>
     </a>
-    <a href="/add_transaction" class="bg-white rounded-2xl shadow-lg p-6 card-hover border border-gray-100 flex items-center gap-4 group">
+    <a href="/add_transaction" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 card-hover border border-gray-100 dark:border-slate-700 flex items-center gap-4 group">
         <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
             <span class="text-3xl">📝</span>
         </div>
         <div>
-            <h3 class="text-lg font-bold text-gray-800">Add Entry</h3>
-            <p class="text-sm text-gray-500">Record credit or payment</p>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Add Entry</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Record credit or payment</p>
         </div>
     </a>
 </div>
 
-<div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 fade-in">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="text-xl font-bold text-gray-800">📋 Recent Transactions</h3>
-        <span class="text-sm text-gray-500">Last 10 entries</span>
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white">📋 Recent Transactions</h3>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Last 10 entries</span>
     </div>
     {% if recent_transactions %}
     <div class="space-y-4">
         {% for t in recent_transactions %}
-        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 card-hover">
+        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 rounded-xl border border-gray-100 dark:border-slate-600 card-hover">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 {% if t.type == 'credit' %}bg-red-100{% else %}bg-green-100{% endif %} rounded-xl flex items-center justify-center">
                     <span class="text-2xl">{% if t.type == 'credit' %}➖{% else %}➕{% endif %}</span>
                 </div>
                 <div>
-                    <p class="font-semibold text-gray-800">{{ t.customer_name }}</p>
-                    <p class="text-sm text-gray-500">{{ t.date }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full {% if t.type == 'credit' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    <p class="font-semibold text-gray-800 dark:text-white">{{ t.customer_name }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t.date }}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full {% if t.type == 'credit' %}bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300{% else %}bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300{% endif %}">
                         {% if t.type == 'credit' %}❌ CREDIT (THEY OWE){% else %}✅ PAYMENT (PAID){% endif %}
                     </span>
                 </div>
@@ -255,7 +285,7 @@ HOME_HTML = HTML.replace('{% block content %}{% endblock %}', '''
                 </p>
                 {% if t.email %}
                 <button onclick="sendReminder({{ t.customer_id }}, '{{ t.email }}', {{ t.pending_amount }})" 
-                    class="text-sm text-purple-600 hover:text-purple-700 font-medium mt-1 flex items-center gap-1 ml-auto">
+                    class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium mt-1 flex items-center gap-1 ml-auto">
                     📧 Remind
                 </button>
                 {% endif %}
@@ -265,11 +295,11 @@ HOME_HTML = HTML.replace('{% block content %}{% endblock %}', '''
     </div>
     {% else %}
     <div class="text-center py-12">
-        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span class="text-4xl">📋</span>
         </div>
-        <p class="text-gray-500">No transactions yet</p>
-        <a href="/add_transaction" class="inline-block mt-4 text-purple-600 font-medium hover:text-purple-700">Add your first entry</a>
+        <p class="text-gray-500 dark:text-gray-400">No transactions yet</p>
+        <a href="/add_transaction" class="inline-block mt-4 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300">Add your first entry</a>
     </div>
     {% endif %}
 </div>
@@ -291,9 +321,9 @@ function sendReminder(customerId, email, amount) {
 
 
 CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
-<div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 fade-in">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">👥 Customers</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">👥 Customers</h2>
         <a href="/add_customer" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2">
             ➕ Add Customer
         </a>
@@ -301,20 +331,20 @@ CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
     {% if customers %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% for c in customers %}
-        <a href="/customer/{{ c.id }}" class="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100 card-hover">
+        <a href="/customer/{{ c.id }}" class="bg-gradient-to-br from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 p-5 rounded-xl border border-gray-100 dark:border-slate-600 card-hover">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
                         <span class="text-2xl">👤</span>
                     </div>
                     <div>
-                        <p class="font-semibold text-gray-800">{{ c.name }}</p>
-                        <p class="text-sm text-gray-500">{{ c.phone or 'No phone' }}</p>
+                        <p class="font-semibold text-gray-800 dark:text-white">{{ c.name }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ c.phone or 'No phone' }}</p>
                     </div>
                 </div>
                 <div class="text-right">
                     <p class="text-xl font-bold {% if c.pending > 0 %}text-red-600{% else %}text-green-600{% endif %}">₹{{ c.pending }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full {% if c.pending > 0 %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full {% if c.pending > 0 %}bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300{% else %}bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300{% endif %}">
                         {% if c.pending > 0 %}❌ PENDING{% else %}✅ CLEAR{% endif %}
                     </span>
                 </div>
@@ -324,11 +354,11 @@ CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
     </div>
     {% else %}
     <div class="text-center py-12">
-        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span class="text-4xl">👥</span>
         </div>
-        <p class="text-gray-500">No customers yet</p>
-        <a href="/add_customer" class="inline-block mt-4 text-purple-600 font-medium hover:text-purple-700">Add your first customer</a>
+        <p class="text-gray-500 dark:text-gray-400">No customers yet</p>
+        <a href="/add_customer" class="inline-block mt-4 text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300">Add your first customer</a>
     </div>
     {% endif %}
 </div>
@@ -336,34 +366,34 @@ CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 
 ADD_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="max-w-xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 fade-in">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
         <div class="text-center mb-8">
             <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">👤</span>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Add Customer</h2>
-            <p class="text-gray-500 mt-1">Register a new customer</p>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Add Customer</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Register a new customer</p>
         </div>
         <form method="POST">
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">👤 Customer Name</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer Name</label>
                 <input type="text" name="name" placeholder="Enter customer name" required
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📱 Phone (optional)</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📱 Phone (optional)</label>
                 <input type="text" name="phone" placeholder="Enter phone number"
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📧 Email (optional)</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📧 Email (optional)</label>
                 <input type="email" name="email" placeholder="Enter email address"
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <button type="submit" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg mb-3">
                 ➕ Add Customer
             </button>
-            <a href="/customers" class="block text-center text-gray-600 hover:text-gray-800 font-medium">❌ Cancel</a>
+            <a href="/customers" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium">❌ Cancel</a>
         </form>
     </div>
 </div>
@@ -371,18 +401,18 @@ ADD_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 
 ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="max-w-xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 fade-in">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">📝</span>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Add Entry</h2>
-            <p class="text-gray-500 mt-1">Record credit or payment</p>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Add Entry</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Record credit or payment</p>
         </div>
         <form method="POST">
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">👤 Customer</label>
-                <select name="customer_id" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer</label>
+                <select name="customer_id" required class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
                     <option value="">Select customer</option>
                     {% for c in customers %}
                     <option value="{{ c.id }}" {% if preselected == c.id|string %}selected{% endif %}>{{ c.name }} (Pending: ₹{{ c.pending }})</option>
@@ -390,26 +420,26 @@ ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
                 </select>
             </div>
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">💰 Type</label>
-                <select name="type" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💰 Type</label>
+                <select name="type" required class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
                     <option value="credit">❌ Credit (they owe you)</option>
                     <option value="payment">✅ Payment (they paid you)</option>
                 </select>
             </div>
             <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">💵 Amount (₹)</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💵 Amount (₹)</label>
                 <input type="number" name="amount" placeholder="Enter amount" required min="1"
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Note (optional)</label>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📝 Note (optional)</label>
                 <input type="text" name="note" placeholder="Add a note"
-                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
             </div>
             <button type="submit" class="w-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg mb-3">
                 📝 Add Entry
             </button>
-            <a href="/" class="block text-center text-gray-600 hover:text-gray-800 font-medium">❌ Cancel</a>
+            <a href="/" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium">❌ Cancel</a>
         </form>
     </div>
 </div>
@@ -418,19 +448,19 @@ ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 CUSTOMER_DETAIL_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in">
     <div class="lg:col-span-1">
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-slate-700">
             <div class="text-center mb-6">
                 <div class="w-20 h-20 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <span class="text-4xl">👤</span>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800">{{ customer.name }}</h2>
-                <p class="text-gray-500">📱 {{ customer.phone or 'No phone' }}</p>
-                <p class="text-gray-500">📧 {{ customer.email or 'No email' }}</p>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">{{ customer.name }}</h2>
+                <p class="text-gray-500 dark:text-gray-400">📱 {{ customer.phone or 'No phone' }}</p>
+                <p class="text-gray-500 dark:text-gray-400">📧 {{ customer.email or 'No email' }}</p>
             </div>
-            <div class="bg-gradient-to-br {% if pending > 0 %}from-red-50 to-pink-50{% else %}from-green-50 to-emerald-50{% endif %} p-6 rounded-2xl mb-4">
-                <p class="text-sm font-medium text-gray-600 mb-1">💰 Total Pending</p>
+            <div class="bg-gradient-to-br {% if pending > 0 %}from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30{% else %}from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30{% endif %} p-6 rounded-2xl mb-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">💰 Total Pending</p>
                 <p class="text-4xl font-bold {% if pending > 0 %}text-red-600{% else %}text-green-600{% endif %}">₹{{ pending }}</p>
-                <span class="inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full {% if pending > 0 %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                <span class="inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full {% if pending > 0 %}bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300{% else %}bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300{% endif %}">
                     {% if pending > 0 %}❌ MONEY TO COLLECT{% else %}✅ ALL SETTLED{% endif %}
                 </span>
             </div>
@@ -439,23 +469,27 @@ CUSTOMER_DETAIL_HTML = HTML.replace('{% block content %}{% endblock %}', '''
                     class="block bg-gradient-to-br from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-center">
                     📝 + Add Entry
                 </a>
+                <a href="/edit_customer/{{ customer.id }}" 
+                    class="block bg-gradient-to-br from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-center">
+                    ✏️ Edit Customer
+                </a>
                 {% if customer.email %}
                 <button onclick="sendReminder({{ customer.id }}, '{{ customer.email }}', {{ pending }})" 
                     class="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all">
                     📧 Send Payment Reminder
                 </button>
                 {% endif %}
-                <a href="/customers" class="block text-center text-gray-600 hover:text-gray-800 font-medium py-2">⬅️ Back to Customers</a>
+                <a href="/customers" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium py-2">⬅️ Back to Customers</a>
             </div>
         </div>
     </div>
     <div class="lg:col-span-2">
-        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-800 mb-6">📋 Transaction History</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6">📋 Transaction History</h3>
             {% if transactions %}
             <div class="space-y-4">
                 {% for t in transactions %}
-                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
+                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 rounded-xl border border-gray-100 dark:border-slate-600">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 {% if t.type == 'credit' %}bg-red-100{% else %}bg-green-100{% endif %} rounded-xl flex items-center justify-center">
                             <span class="text-2xl">{% if t.type == 'credit' %}➖{% else %}➕{% endif %}</span>
@@ -464,8 +498,8 @@ CUSTOMER_DETAIL_HTML = HTML.replace('{% block content %}{% endblock %}', '''
                             <p class="font-semibold {% if t.type == 'credit' %}text-red-600{% else %}text-green-600{% endif %}">
                                 {% if t.type == 'credit' %}❌ CREDIT (THEY OWE){% else %}✅ PAYMENT (PAID){% endif %}
                             </p>
-                            <p class="text-sm text-gray-500">{{ t.date }}</p>
-                            {% if t.note %}<p class="text-sm text-gray-400">📝 {{ t.note }}</p>{% endif %}
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t.date }}</p>
+                            {% if t.note %}<p class="text-sm text-gray-400 dark:text-gray-500">📝 {{ t.note }}</p>{% endif %}
                         </div>
                     </div>
                     <p class="text-xl font-bold {% if t.type == 'credit' %}text-red-600{% else %}text-green-600{% endif %}">
@@ -476,10 +510,10 @@ CUSTOMER_DETAIL_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             </div>
             {% else %}
             <div class="text-center py-12">
-                <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <span class="text-4xl">📋</span>
                 </div>
-                <p class="text-gray-500">No transactions yet</p>
+                <p class="text-gray-500 dark:text-gray-400">No transactions yet</p>
             </div>
             {% endif %}
         </div>
@@ -503,16 +537,16 @@ function sendReminder(customerId, email, amount) {
 
 GMAIL_SETUP_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="max-w-xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 fade-in">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
         <div class="text-center mb-8">
             <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">📧</span>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Gmail Setup</h2>
-            <p class="text-gray-500 mt-1">Connect your Gmail for payment reminders</p>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Gmail Setup</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Connect your Gmail for payment reminders</p>
         </div>
         {% if message %}
-        <div class="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-xl mb-6 flex items-center gap-3">
+        <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 p-4 rounded-xl mb-6 flex items-center gap-3">
             <span class="text-xl">ℹ️</span>
             {{ message }}
         </div>
@@ -522,17 +556,52 @@ GMAIL_SETUP_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             🔗 Connect Gmail
         </a>
         {% else %}
-        <div class="bg-green-50 border border-green-200 p-6 rounded-xl mb-6 text-center">
-            <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-6 rounded-xl mb-6 text-center">
+            <div class="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="text-4xl">✅</span>
             </div>
-            <p class="text-green-700 font-semibold text-lg">Gmail is connected!</p>
-            <p class="text-green-600 text-sm mt-1">You can now send payment reminders</p>
+            <p class="text-green-700 dark:text-green-300 font-semibold text-lg">Gmail is connected!</p>
+            <p class="text-green-600 dark:text-green-400 text-sm mt-1">You can now send payment reminders</p>
         </div>
         <a href="/" class="block bg-gradient-to-br from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg text-center">
             🏠 Go to Dashboard
         </a>
         {% endif %}
+    </div>
+</div>
+''')
+
+EDIT_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
+<div class="max-w-xl mx-auto">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span class="text-4xl">✏️</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Edit Customer</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Update customer details</p>
+        </div>
+        <form method="POST">
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer Name</label>
+                <input type="text" name="name" value="{{ customer.name }}" required
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+            </div>
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📱 Phone (optional)</label>
+                <input type="text" name="phone" value="{{ customer.phone or '' }}" placeholder="Enter phone number"
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📧 Email (optional)</label>
+                <input type="email" name="email" value="{{ customer.email or '' }}" placeholder="Enter email address"
+                    class="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none">
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-br from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg mb-3">
+                ✏️ Save Changes
+            </button>
+            <a href="/customer/{{ customer.id }}" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium">❌ Cancel</a>
+        </form>
     </div>
 </div>
 ''')
@@ -739,6 +808,40 @@ def customer_detail(customer_id):
         transactions=transactions,
         pending=int(pending or 0)
     )
+
+
+@app.route("/edit_customer/<int:customer_id>", methods=["GET", "POST"])
+def edit_customer(customer_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    
+    customer = conn.execute(
+        "SELECT * FROM customers WHERE id = ? AND user_id = ?",
+        (customer_id, session["user_id"])
+    ).fetchone()
+    
+    if not customer:
+        conn.close()
+        return "Customer not found", 404
+    
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        phone = request.form.get("phone", "").strip() or None
+        email = request.form.get("email", "").strip() or None
+        
+        conn.execute(
+            "UPDATE customers SET name = ?, phone = ?, email = ? WHERE id = ?",
+            (name, phone, email, customer_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        return redirect(url_for("customer_detail", customer_id=customer_id))
+    
+    conn.close()
+    return render_template_string(EDIT_CUSTOMER_HTML, customer=customer)
 
 
 @app.route("/send_reminder", methods=["POST"])
