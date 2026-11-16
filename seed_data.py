@@ -6,7 +6,42 @@ DB_FILE = "shop_tracker.db"
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            phone TEXT,
+            email TEXT,
+            user_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            type TEXT NOT NULL,
+            note TEXT,
+            date TEXT NOT NULL,
+            FOREIGN KEY (customer_id) REFERENCES customers(id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
 def seed():
+    init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
