@@ -30,6 +30,7 @@ wheels/
 
 # OAuth tokens
 token.json
+credentials.json
 
 # IDE
 .vscode/
