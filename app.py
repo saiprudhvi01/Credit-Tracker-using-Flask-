@@ -177,7 +177,12 @@ HTML = '''
             const chat = document.getElementById('voiceChat');
             chat.classList.toggle('hidden');
             if (!chat.classList.contains('hidden')) {
-                document.getElementById('chatInput').focus();
+                const input = document.getElementById('chatInput');
+                input.focus();
+                // Remove existing listener if any
+                input.removeEventListener('keypress', handleKeyPress);
+                // Add new listener
+                input.addEventListener('keypress', handleKeyPress);
             }
         }
         
@@ -294,9 +299,9 @@ HTML = '''
             }
         }
         
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+        function handleKeyPress(e) {
             if (e.key === 'Enter') sendMessage();
-        });
+        }
     </script>
     
     <div id="voiceChat" class="hidden fixed bottom-6 right-6 w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 z-40">
@@ -315,7 +320,7 @@ HTML = '''
             <button onclick="startVoiceInput()" class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-all pulse-ring">
                 🎤
             </button>
-            <input type="text" id="chatInput" placeholder="Type or speak a command..." 
+            <input type="text" id="chatInput" placeholder="Type or speak a command..." onkeypress="if(event.key==='Enter')sendMessage()"
                 class="flex-1 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
             <button onclick="sendMessage()" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 transition-all">
                 Send
