@@ -327,10 +327,12 @@ HTML = '''
         </div>
         <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
             <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-center text-sm">
-                <strong>Voice Commands:</strong><br>
-                "Add credit for Venkat 500"<br>
-                "Venkat paid 1000"<br><br>
-                <em>Or just type your command below</em>
+                <strong>Natural Commands:</strong><br>
+                "Venkat gave 500" (credit)<br>
+                "Venkat paid 1000" (payment)<br>
+                "Venkat owes 200" (credit)<br>
+                "Venkat settled 500" (payment)<br><br>
+                <em>Or just type naturally!</em>
             </div>
         </div>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
@@ -1209,12 +1211,12 @@ def api_add_transaction():
 @app.route("/api/voice-command", methods=["POST"])
 def api_voice_command():
     if "user_id" not in session:
-        return jsonify({"success": False, "message": "Not logged in"})
+        return jsonify({"success": False, "message": "Please log in first"})
     
     data = request.get_json()
     command = data.get("command", "").lower().strip()
     
-    # Parse command with improved regex
+    # Parse command with improved natural language
     import re
     
     # Get all customers for fuzzy matching
@@ -1225,70 +1227,104 @@ def api_voice_command():
     ).fetchall()
     customer_map = {c["name"].lower(): c["id"] for c in customers}
     
-    # Try to find customer name in command
+    # Try to find customer name in command (more flexible matching)
     customer_name = None
     customer_id = None
     
-    # Check each customer name (case-insensitive)
+    # Check each customer name (case-insensitive, partial match)
     for cust_name, cust_id in customer_map.items():
-        if cust_name in command:
+        # Check if customer name appears in command
+        if cust_name in command or command in cust_name:
             customer_name = cust_name
             customer_id = cust_id
             break
     
-    # Extract amount (find first number)
-    amount_match = re.search(r'(\d+(?:,\d+)*)', command)
-    amount = int(amount_match.group(1).replace(',', '')) if amount_match else None
+    # Extract amount (find first number, handle various formats)
+    amount_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)', command)
+    amount = float(amount_match.group(1).replace(',', '')) if amount_match else None
     
-    # Determine transaction type
+    # Determine transaction type with more natural language
     trans_type = None
-    if any(word in command for word in ['credit', 'gave', 'owe', 'lent']):
-        trans_type = 'credit'
-    elif any(word in command for word in ['payment', 'paid', 'received', 'got']):
-        trans_type = 'payment'
+    action_word = None
+    
+    # Credit indicators (they owe you money)
+    credit_keywords = ['credit', 'gave', 'owe', 'owed', 'lent', 'borrowed', 'took', 'debt', 'due']
+    # Payment indicators (they paid you money)
+    payment_keywords = ['payment', 'paid', 'received', 'got', 'gave back', 'returned', 'settled', 'cleared']
+    
+    for word in credit_keywords:
+        if word in command:
+            trans_type = 'credit'
+            action_word = word
+            break
+    
+    if not trans_type:
+        for word in payment_keywords:
+            if word in command:
+                trans_type = 'payment'
+                action_word = word
+                break
     
     # If we have customer and amount, proceed
     if customer_id and amount and trans_type:
         date = datetime.now().strftime("%Y-%m-%d %H:%M")
         conn.execute(
             "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
-            (customer_id, amount, trans_type, f'Voice command: {command}', date)
+            (customer_id, amount, trans_type, f'Voice: {command}', date)
         )
         conn.commit()
-        conn.close()
         
         # Get actual customer name for display
         actual_name = next(c["name"] for c in customers if c["id"] == customer_id)
-        return jsonify({
-            "success": True, 
-            "message": f"✅ Added {trans_type} of ₹{amount} for {actual_name}"
-        })
+        
+        # Friendly, conversational response
+        if trans_type == 'credit':
+            responses = [
+                f"Got it! Added ₹{amount} credit for {actual_name}. They now owe you this amount.",
+                f"Done! Recorded that {actual_name} owes you ₹{amount}.",
+                f"Perfect! Added ₹{amount} to {actual_name}'s balance.",
+                f"Great! {actual_name} now has a credit of ₹{amount}."
+            ]
+        else:
+            responses = [
+                f"Awesome! Recorded ₹{amount} payment from {actual_name}. Their balance is updated.",
+                f"Great! {actual_name} paid ₹{amount}. Balance updated.",
+                f"Perfect! Payment of ₹{amount} from {actual_name} recorded.",
+                f"Done! {actual_name} settled ₹{amount}."
+            ]
+        
+        import random
+        response = random.choice(responses)
+        conn.close()
+        return jsonify({"success": True, "message": response})
     
-    # Provide helpful error messages
+    # Provide helpful, friendly error messages
     if not customer_name:
         conn.close()
         available_names = ", ".join([c["name"] for c in customers[:5]])
+        if len(customers) > 5:
+            available_names += f", and {len(customers) - 5} more"
         return jsonify({
             "success": False, 
-            "message": f"❌ Customer not found. Available: {available_names}..."
+            "message": f"🤔 I couldn't find that customer. Available: {available_names}. Try using their exact name!"
         })
     
     if not amount:
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "❌ No amount detected. Please include the amount (e.g., '500')"
+            "message": "💰 I need an amount! Tell me how much, like 'Venkat gave 500' or 'Venkat paid 1000'."
         })
     
     if not trans_type:
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "❌ Transaction type unclear. Use 'credit' or 'payment'"
+            "message": "🤷 Is this a credit (they owe you) or payment (they paid you)? Try: 'Venkat gave 500' or 'Venkat paid 1000'."
         })
     
     conn.close()
-    return jsonify({"success": False, "message": "❓ Could not parse command"})
+    return jsonify({"success": False, "message": "🤔 I'm not sure what you mean. Try: 'Venkat gave 500' or 'Venkat paid 1000'."})
 
 
 if __name__ == "__main__":
