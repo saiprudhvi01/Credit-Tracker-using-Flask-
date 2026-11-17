@@ -188,14 +188,16 @@ HTML = '''
         
         let recognition;
         let isListening = false;
+        let speechSupported = false;
         
+        // Check if speech recognition is supported
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            speechSupported = true;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
-            recognition.continuous = true;
+            recognition.continuous = false;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
-            recognition.maxAlternatives = 1;
             
             recognition.onstart = function() {
                 isListening = true;
@@ -204,31 +206,19 @@ HTML = '''
                     btn.classList.add('animate-pulse');
                     btn.innerHTML = '🔴';
                 }
+                addMessage('system', '🎤 Listening... Speak now');
             };
             
             recognition.onresult = function(event) {
-                let interimTranscript = '';
                 let finalTranscript = '';
-                
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
-                
-                // Show interim results in the input
-                const input = document.getElementById('chatInput');
-                if (interimTranscript) {
-                    input.value = interimTranscript;
-                }
-                
-                // When we have final result, send it
                 if (finalTranscript) {
-                    input.value = finalTranscript;
-                    recognition.stop();
-                    setTimeout(() => sendMessage(), 500);
+                    document.getElementById('chatInput').value = finalTranscript;
+                    sendMessage();
                 }
             };
             
@@ -248,10 +238,12 @@ HTML = '''
                 } else if (event.error === 'not-allowed') {
                     errorMsg = 'Microphone access denied. Allow microphone access in browser settings.';
                 } else if (event.error === 'network') {
-                    errorMsg = 'Network error. Check your internet connection.';
+                    errorMsg = 'Network error. Voice recognition requires internet connection.';
+                } else if (event.error === 'aborted') {
+                    errorMsg = 'Recording was stopped.';
                 }
                 
-                console.error('Speech recognition error:', event.error);
+                console.error('Speech recognition error:', event.error, event.message);
                 addMessage('system', '❌ ' + errorMsg);
             };
             
@@ -263,6 +255,8 @@ HTML = '''
                     btn.innerHTML = '🎤';
                 }
             };
+        } else {
+            console.log('Speech recognition not supported in this browser');
         }
         
         function startVoiceInput() {
@@ -271,15 +265,20 @@ HTML = '''
                 return;
             }
             
+            if (!speechSupported) {
+                alert('Voice input is not supported in this browser. Please use Chrome or Edge, or type your command instead.');
+                return;
+            }
+            
             if (recognition) {
                 try {
                     recognition.start();
-                    addMessage('system', '🎤 Listening... Speak clearly: "Add credit for [name] [amount]"');
                 } catch (e) {
-                    addMessage('system', '❌ Error starting microphone. Please try again.');
+                    console.error('Error starting recognition:', e);
+                    addMessage('system', '❌ Error starting microphone. Please try typing instead.');
                 }
             } else {
-                alert('Voice input not supported in this browser. Try Chrome or Edge.');
+                addMessage('system', '❌ Voice recognition not available. Please type your command.');
             }
         }
         
@@ -328,9 +327,10 @@ HTML = '''
         </div>
         <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
             <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-center text-sm">
-                Say commands like:<br>
-                "Add credit for Ravi 500"<br>
-                "Add payment for Suresh 1000"
+                <strong>Voice Commands:</strong><br>
+                "Add credit for Venkat 500"<br>
+                "Venkat paid 1000"<br><br>
+                <em>Or just type your command below</em>
             </div>
         </div>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
