@@ -182,30 +182,82 @@ HTML = '''
         }
         
         let recognition;
+        let isListening = false;
+        
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.continuous = false;
-            recognition.interimResults = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            recognition.maxAlternatives = 3;
+            
+            recognition.onstart = function() {
+                isListening = true;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.add('animate-pulse');
+                    btn.innerHTML = '🔴';
+                }
+            };
             
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('chatInput').value = transcript;
-                sendMessage();
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript = event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    document.getElementById('chatInput').value = finalTranscript;
+                    sendMessage();
+                }
             };
             
             recognition.onerror = function(event) {
-                console.error('Speech recognition error:', event.error);
-                addMessage('system', 'Could not understand. Please try again.');
+                isListening = false;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.remove('animate-pulse');
+                    btn.innerHTML = '🎤';
+                }
+                
+                let errorMsg = 'Could not understand. Please try again.';
+                if (event.error === 'no-speech') {
+                    errorMsg = 'No speech detected. Please speak clearly.';
+                } else if (event.error === 'audio-capture') {
+                    errorMsg = 'Microphone not found. Please check your device.';
+                } else if (event.error === 'not-allowed') {
+                    errorMsg = 'Microphone access denied. Please allow microphone access.';
+                }
+                addMessage('system', '❌ ' + errorMsg);
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.remove('animate-pulse');
+                    btn.innerHTML = '🎤';
+                }
             };
         }
         
         function startVoiceInput() {
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+            
             if (recognition) {
-                recognition.start();
-                addMessage('system', '🎤 Listening...');
+                try {
+                    recognition.start();
+                    addMessage('system', '🎤 Listening... Speak clearly: "Add credit for [name] [amount]"');
+                } catch (e) {
+                    addMessage('system', '❌ Error starting microphone. Please try again.');
+                }
             } else {
-                alert('Voice input not supported in this browser. Try Chrome.');
+                alert('Voice input not supported in this browser. Try Chrome or Edge.');
             }
         }
         
@@ -1138,88 +1190,83 @@ def api_voice_command():
         return jsonify({"success": False, "message": "Not logged in"})
     
     data = request.get_json()
-    command = data.get("command", "").lower()
+    command = data.get("command", "").lower().strip()
     
-    # Parse command
+    # Parse command with improved regex
     import re
     
-    # Check for credit command
-    if any(word in command for word in ['credit', 'gave']):
-        amount_match = re.search(r'(\d+)', command)
-        amount = int(amount_match.group(1)) if amount_match else None
-        
-        # Extract customer name
-        name_match = re.search(r'for\s+(\w+)', command)
-        if name_match:
-            name = name_match.group(1)
-        else:
-            words = command.split()
-            name = None
-            for i, word in enumerate(words):
-                if word.isdigit():
-                    name = words[i-1] if i > 0 else None
-                    break
-        
-        if name and amount:
-            conn = get_db()
-            customer = conn.execute(
-                "SELECT id FROM customers WHERE LOWER(name) = ? AND user_id = ?",
-                (name.lower(), session["user_id"])
-            ).fetchone()
-            
-            if customer:
-                date = datetime.now().strftime("%Y-%m-%d %H:%M")
-                conn.execute(
-                    "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
-                    (customer["id"], amount, 'credit', f'Voice command', date)
-                )
-                conn.commit()
-                conn.close()
-                return jsonify({"success": True, "message": f"✅ Added credit of ₹{amount} for {name}"})
-            else:
-                return jsonify({"success": False, "message": f"❌ Customer '{name}' not found"})
-        else:
-            return jsonify({"success": False, "message": "❌ Could not parse command. Try: 'Add credit for Ravi 500'"})
+    # Get all customers for fuzzy matching
+    conn = get_db()
+    customers = conn.execute(
+        "SELECT id, name FROM customers WHERE user_id = ?",
+        (session["user_id"],)
+    ).fetchall()
+    customer_map = {c["name"].lower(): c["id"] for c in customers}
     
-    # Check for payment command
-    elif any(word in command for word in ['payment', 'paid']):
-        amount_match = re.search(r'(\d+)', command)
-        amount = int(amount_match.group(1)) if amount_match else None
-        
-        name_match = re.search(r'for\s+(\w+)', command)
-        if name_match:
-            name = name_match.group(1)
-        else:
-            words = command.split()
-            name = None
-            for i, word in enumerate(words):
-                if word.isdigit():
-                    name = words[i-1] if i > 0 else None
-                    break
-        
-        if name and amount:
-            conn = get_db()
-            customer = conn.execute(
-                "SELECT id FROM customers WHERE LOWER(name) = ? AND user_id = ?",
-                (name.lower(), session["user_id"])
-            ).fetchone()
-            
-            if customer:
-                date = datetime.now().strftime("%Y-%m-%d %H:%M")
-                conn.execute(
-                    "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
-                    (customer["id"], amount, 'payment', f'Voice command', date)
-                )
-                conn.commit()
-                conn.close()
-                return jsonify({"success": True, "message": f"✅ Added payment of ₹{amount} for {name}"})
-            else:
-                return jsonify({"success": False, "message": f"❌ Customer '{name}' not found"})
-        else:
-            return jsonify({"success": False, "message": "❌ Could not parse command. Try: 'Add payment for Suresh 1000'"})
+    # Try to find customer name in command
+    customer_name = None
+    customer_id = None
     
-    else:
-        return jsonify({"success": False, "message": "❓ Unknown command. Try: 'Add credit for Ravi 500' or 'Add payment for Suresh 1000'"})
+    # Check each customer name (case-insensitive)
+    for cust_name, cust_id in customer_map.items():
+        if cust_name in command:
+            customer_name = cust_name
+            customer_id = cust_id
+            break
+    
+    # Extract amount (find first number)
+    amount_match = re.search(r'(\d+(?:,\d+)*)', command)
+    amount = int(amount_match.group(1).replace(',', '')) if amount_match else None
+    
+    # Determine transaction type
+    trans_type = None
+    if any(word in command for word in ['credit', 'gave', 'owe', 'lent']):
+        trans_type = 'credit'
+    elif any(word in command for word in ['payment', 'paid', 'received', 'got']):
+        trans_type = 'payment'
+    
+    # If we have customer and amount, proceed
+    if customer_id and amount and trans_type:
+        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        conn.execute(
+            "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
+            (customer_id, amount, trans_type, f'Voice command: {command}', date)
+        )
+        conn.commit()
+        conn.close()
+        
+        # Get actual customer name for display
+        actual_name = next(c["name"] for c in customers if c["id"] == customer_id)
+        return jsonify({
+            "success": True, 
+            "message": f"✅ Added {trans_type} of ₹{amount} for {actual_name}"
+        })
+    
+    # Provide helpful error messages
+    if not customer_name:
+        conn.close()
+        available_names = ", ".join([c["name"] for c in customers[:5]])
+        return jsonify({
+            "success": False, 
+            "message": f"❌ Customer not found. Available: {available_names}..."
+        })
+    
+    if not amount:
+        conn.close()
+        return jsonify({
+            "success": False, 
+            "message": "❌ No amount detected. Please include the amount (e.g., '500')"
+        })
+    
+    if not trans_type:
+        conn.close()
+        return jsonify({
+            "success": False, 
+            "message": "❌ Transaction type unclear. Use 'credit' or 'payment'"
+        })
+    
+    conn.close()
+    return jsonify({"success": False, "message": "❓ Could not parse command"})
 
 
 if __name__ == "__main__":
