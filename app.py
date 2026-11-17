@@ -327,21 +327,21 @@ HTML = '''
         </div>
         <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
             <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-sm">
-                <strong>💡 Quick Reference:</strong><br><br>
-                <span class="text-red-600 font-semibold">❌ CREDIT (they owe you):</span><br>
-                Use: <em>gave, owe, owed, lent, borrowed, took, debt, due</em><br>
-                Examples: "Venkat gave 500", "Venkat owes 200"<br><br>
-                <span class="text-green-600 font-semibold">✅ PAYMENT (they paid you):</span><br>
-                Use: <em>paid, received, got, returned, settled, cleared</em><br>
-                Examples: "Venkat paid 1000", "Venkat settled 500"<br><br>
-                <em>Format: [Name] [keyword] [amount]</em>
+                <strong>💡 Simple Format:</strong><br><br>
+                <span class="text-red-600 font-semibold">➕ CREDIT (they owe you):</span><br>
+                Use: <em>+</em> or <em>plus</em><br>
+                Example: "Venkat + 500"<br><br>
+                <span class="text-green-600 font-semibold">➖ PAYMENT (they paid you):</span><br>
+                Use: <em>-</em> or <em>minus</em><br>
+                Example: "Venkat - 1000"<br><br>
+                <em>Format: [Name] [+/-] [amount]</em>
             </div>
         </div>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
             <button onclick="startVoiceInput()" class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-all pulse-ring">
                 🎤
             </button>
-            <input type="text" id="chatInput" placeholder="Type or speak a command..." onkeypress="if(event.key==='Enter')sendMessage()"
+            <input type="text" id="chatInput" placeholder="e.g., Venkat + 500 or Venkat - 1000" onkeypress="if(event.key==='Enter')sendMessage()"
                 class="flex-1 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
             <button onclick="sendMessage()" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 transition-all">
                 Send
@@ -1218,7 +1218,7 @@ def api_voice_command():
     data = request.get_json()
     command = data.get("command", "").lower().strip()
     
-    # Parse command with improved natural language
+    # Parse command with + and - symbols
     import re
     
     # Get all customers for fuzzy matching
@@ -1229,43 +1229,27 @@ def api_voice_command():
     ).fetchall()
     customer_map = {c["name"].lower(): c["id"] for c in customers}
     
-    # Try to find customer name in command (more flexible matching)
+    # Try to find customer name in command
     customer_name = None
     customer_id = None
     
-    # Check each customer name (case-insensitive, partial match)
     for cust_name, cust_id in customer_map.items():
-        # Check if customer name appears in command
         if cust_name in command or command in cust_name:
             customer_name = cust_name
             customer_id = cust_id
             break
     
-    # Extract amount (find first number, handle various formats)
+    # Determine transaction type based on + or - symbol
+    trans_type = None
+    
+    if '+' in command or 'plus' in command:
+        trans_type = 'credit'  # They owe you (add to balance)
+    elif '-' in command or 'minus' in command:
+        trans_type = 'payment'  # They paid you (subtract from balance)
+    
+    # Extract amount (find first number)
     amount_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)', command)
     amount = float(amount_match.group(1).replace(',', '')) if amount_match else None
-    
-    # Determine transaction type with more natural language
-    trans_type = None
-    action_word = None
-    
-    # Credit indicators (they owe you money)
-    credit_keywords = ['credit', 'gave', 'owe', 'owed', 'lent', 'borrowed', 'took', 'debt', 'due']
-    # Payment indicators (they paid you money)
-    payment_keywords = ['payment', 'paid', 'received', 'got', 'gave back', 'returned', 'settled', 'cleared']
-    
-    for word in credit_keywords:
-        if word in command:
-            trans_type = 'credit'
-            action_word = word
-            break
-    
-    if not trans_type:
-        for word in payment_keywords:
-            if word in command:
-                trans_type = 'payment'
-                action_word = word
-                break
     
     # If we have customer and amount, proceed
     if customer_id and amount and trans_type:
@@ -1279,28 +1263,16 @@ def api_voice_command():
         # Get actual customer name for display
         actual_name = next(c["name"] for c in customers if c["id"] == customer_id)
         
-        # Friendly, conversational response
+        # Friendly response
         if trans_type == 'credit':
-            responses = [
-                f"Got it! Added ₹{amount} credit for {actual_name}. They now owe you this amount.",
-                f"Done! Recorded that {actual_name} owes you ₹{amount}.",
-                f"Perfect! Added ₹{amount} to {actual_name}'s balance.",
-                f"Great! {actual_name} now has a credit of ₹{amount}."
-            ]
+            response = f"✅ Added ₹{amount} credit for {actual_name} (+)"
         else:
-            responses = [
-                f"Awesome! Recorded ₹{amount} payment from {actual_name}. Their balance is updated.",
-                f"Great! {actual_name} paid ₹{amount}. Balance updated.",
-                f"Perfect! Payment of ₹{amount} from {actual_name} recorded.",
-                f"Done! {actual_name} settled ₹{amount}."
-            ]
+            response = f"✅ Added ₹{amount} payment from {actual_name} (-)"
         
-        import random
-        response = random.choice(responses)
         conn.close()
         return jsonify({"success": True, "message": response})
     
-    # Provide helpful, friendly error messages
+    # Provide helpful error messages
     if not customer_name:
         conn.close()
         available_names = ", ".join([c["name"] for c in customers[:5]])
@@ -1308,25 +1280,25 @@ def api_voice_command():
             available_names += f", and {len(customers) - 5} more"
         return jsonify({
             "success": False, 
-            "message": f"🤔 I couldn't find that customer. Available: {available_names}. Try using their exact name!"
+            "message": f"🤔 Customer not found. Available: {available_names}"
         })
     
     if not amount:
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "💰 I need an amount! Tell me how much, like 'Venkat gave 500' or 'Venkat paid 1000'."
+            "message": "💰 No amount found. Include a number."
         })
     
     if not trans_type:
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "🤷 I need to know if this is credit or payment!<br><br>❌ CREDIT words: gave, owe, owed, lent, borrowed, took, debt, due<br>✅ PAYMENT words: paid, received, got, returned, settled, cleared<br><br>Example: 'Venkat gave 500' or 'Venkat paid 1000'"
+            "message": "🤷 Use + for credit or - for payment.<br><br>Example: 'Venkat + 500' or 'Venkat - 1000'"
         })
     
     conn.close()
-    return jsonify({"success": False, "message": "🤔 I'm not sure what you mean. Try: 'Venkat gave 500' or 'Venkat paid 1000'."})
+    return jsonify({"success": False, "message": "🤔 Could not understand. Try: 'Venkat + 500' or 'Venkat - 1000'"})
 
 
 if __name__ == "__main__":
