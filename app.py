@@ -328,11 +328,11 @@ HTML = '''
         <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
             <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-sm">
                 <strong>💡 Simple Format:</strong><br><br>
-                <span class="text-red-600 font-semibold">➕ CREDIT (they owe you):</span><br>
-                Use: <em>+</em> or <em>plus</em><br>
+                <span class="text-red-600 font-semibold">➕ PLUS (khata increased):</span><br>
+                Customer owes more money<br>
                 Example: "Venkat + 500"<br><br>
-                <span class="text-green-600 font-semibold">➖ PAYMENT (they paid you):</span><br>
-                Use: <em>-</em> or <em>minus</em><br>
+                <span class="text-green-600 font-semibold">➖ MINUS (khata decreased):</span><br>
+                Customer paid money<br>
                 Example: "Venkat - 1000"<br><br>
                 <em>Format: [Name] [+/-] [amount]</em>
             </div>
@@ -1243,9 +1243,9 @@ def api_voice_command():
     trans_type = None
     
     if '+' in command or 'plus' in command:
-        trans_type = 'credit'  # They owe you (add to balance)
+        trans_type = 'credit'  # Customer's khata increased (they owe more)
     elif '-' in command or 'minus' in command:
-        trans_type = 'payment'  # They paid you (subtract from balance)
+        trans_type = 'payment'  # Customer paid (khata decreased)
     
     # Extract amount (find first number)
     amount_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)', command)
@@ -1265,9 +1265,9 @@ def api_voice_command():
         
         # Friendly response
         if trans_type == 'credit':
-            response = f"✅ Added ₹{amount} credit for {actual_name} (+)"
+            response = f"✅ {actual_name}'s khata increased by ₹{amount} (+)"
         else:
-            response = f"✅ Added ₹{amount} payment from {actual_name} (-)"
+            response = f"✅ {actual_name} paid ₹{amount}, khata decreased (-)"
         
         conn.close()
         return jsonify({"success": True, "message": response})
@@ -1294,7 +1294,7 @@ def api_voice_command():
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "🤷 Use + for credit or - for payment.<br><br>Example: 'Venkat + 500' or 'Venkat - 1000'"
+            "message": "🤷 Use + to increase khata or - for payment.<br><br>Example: 'Venkat + 500' or 'Venkat - 1000'"
         })
     
     conn.close()
