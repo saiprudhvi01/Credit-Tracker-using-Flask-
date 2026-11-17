@@ -109,6 +109,10 @@ HTML = '''
         .dark .border-gray-200 { border-color: #475569 !important; }
         .dark .from-gray-50 { --tw-gradient-from: #0f172a !important; }
         .dark .to-white { --tw-gradient-to: #1e293b !important; }
+        .chat-bubble { animation: bubbleIn 0.3s ease-out; }
+        @keyframes bubbleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .pulse-ring { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 min-h-screen transition-colors duration-300">
@@ -143,6 +147,9 @@ HTML = '''
                 <button onclick="toggleDarkMode()" class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                     🌙/☀️
                 </button>
+                <button onclick="toggleChat()" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90">
+                    🎤 Voice
+                </button>
                 <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">🚪 Logout</a>
             </div>
         </nav>
@@ -165,7 +172,104 @@ HTML = '''
             loading.style.transition = 'opacity 0.3s ease';
             setTimeout(() => loading.style.display = 'none', 300);
         }, 600);
+        
+        function toggleChat() {
+            const chat = document.getElementById('voiceChat');
+            chat.classList.toggle('hidden');
+            if (!chat.classList.contains('hidden')) {
+                document.getElementById('chatInput').focus();
+            }
+        }
+        
+        let recognition;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = transcript;
+                sendMessage();
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                addMessage('system', 'Could not understand. Please try again.');
+            };
+        }
+        
+        function startVoiceInput() {
+            if (recognition) {
+                recognition.start();
+                addMessage('system', '🎤 Listening...');
+            } else {
+                alert('Voice input not supported in this browser. Try Chrome.');
+            }
+        }
+        
+        function addMessage(type, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-bubble p-3 rounded-lg mb-2 max-w-[80%] ' + 
+                (type === 'user' ? 'bg-purple-500 text-white ml-auto' : 
+                 type === 'system' ? 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white mx-auto text-center text-sm' :
+                 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white border border-gray-200 dark:border-slate-600');
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            addMessage('user', text);
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/voice-command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: text })
+                });
+                const data = await response.json();
+                addMessage('bot', data.message);
+            } catch (error) {
+                addMessage('bot', 'Error processing command');
+            }
+        }
+        
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
     </script>
+    
+    <div id="voiceChat" class="hidden fixed bottom-6 right-6 w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 z-40">
+        <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800 dark:text-white">🎤 Voice Assistant</h3>
+            <button onclick="toggleChat()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">✕</button>
+        </div>
+        <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
+            <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-center text-sm">
+                Say commands like:<br>
+                "Add credit for Ravi 500"<br>
+                "Add payment for Suresh 1000"
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
+            <button onclick="startVoiceInput()" class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-all pulse-ring">
+                🎤
+            </button>
+            <input type="text" id="chatInput" placeholder="Type or speak a command..." 
+                class="flex-1 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+            <button onclick="sendMessage()" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 transition-all">
+                Send
+            </button>
+        </div>
+    </div>
 </body>
 </html>
 '''
@@ -1026,6 +1130,96 @@ def api_add_transaction():
     conn.close()
     
     return jsonify({"success": True, "message": "Transaction added successfully"})
+
+
+@app.route("/api/voice-command", methods=["POST"])
+def api_voice_command():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Not logged in"})
+    
+    data = request.get_json()
+    command = data.get("command", "").lower()
+    
+    # Parse command
+    import re
+    
+    # Check for credit command
+    if any(word in command for word in ['credit', 'gave']):
+        amount_match = re.search(r'(\d+)', command)
+        amount = int(amount_match.group(1)) if amount_match else None
+        
+        # Extract customer name
+        name_match = re.search(r'for\s+(\w+)', command)
+        if name_match:
+            name = name_match.group(1)
+        else:
+            words = command.split()
+            name = None
+            for i, word in enumerate(words):
+                if word.isdigit():
+                    name = words[i-1] if i > 0 else None
+                    break
+        
+        if name and amount:
+            conn = get_db()
+            customer = conn.execute(
+                "SELECT id FROM customers WHERE LOWER(name) = ? AND user_id = ?",
+                (name.lower(), session["user_id"])
+            ).fetchone()
+            
+            if customer:
+                date = datetime.now().strftime("%Y-%m-%d %H:%M")
+                conn.execute(
+                    "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
+                    (customer["id"], amount, 'credit', f'Voice command', date)
+                )
+                conn.commit()
+                conn.close()
+                return jsonify({"success": True, "message": f"✅ Added credit of ₹{amount} for {name}"})
+            else:
+                return jsonify({"success": False, "message": f"❌ Customer '{name}' not found"})
+        else:
+            return jsonify({"success": False, "message": "❌ Could not parse command. Try: 'Add credit for Ravi 500'"})
+    
+    # Check for payment command
+    elif any(word in command for word in ['payment', 'paid']):
+        amount_match = re.search(r'(\d+)', command)
+        amount = int(amount_match.group(1)) if amount_match else None
+        
+        name_match = re.search(r'for\s+(\w+)', command)
+        if name_match:
+            name = name_match.group(1)
+        else:
+            words = command.split()
+            name = None
+            for i, word in enumerate(words):
+                if word.isdigit():
+                    name = words[i-1] if i > 0 else None
+                    break
+        
+        if name and amount:
+            conn = get_db()
+            customer = conn.execute(
+                "SELECT id FROM customers WHERE LOWER(name) = ? AND user_id = ?",
+                (name.lower(), session["user_id"])
+            ).fetchone()
+            
+            if customer:
+                date = datetime.now().strftime("%Y-%m-%d %H:%M")
+                conn.execute(
+                    "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
+                    (customer["id"], amount, 'payment', f'Voice command', date)
+                )
+                conn.commit()
+                conn.close()
+                return jsonify({"success": True, "message": f"✅ Added payment of ₹{amount} for {name}"})
+            else:
+                return jsonify({"success": False, "message": f"❌ Customer '{name}' not found"})
+        else:
+            return jsonify({"success": False, "message": "❌ Could not parse command. Try: 'Add payment for Suresh 1000'"})
+    
+    else:
+        return jsonify({"success": False, "message": "❓ Unknown command. Try: 'Add credit for Ravi 500' or 'Add payment for Suresh 1000'"})
 
 
 if __name__ == "__main__":
