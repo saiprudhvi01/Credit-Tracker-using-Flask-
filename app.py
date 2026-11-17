@@ -289,7 +289,7 @@ HTML = '''
                 (type === 'user' ? 'bg-purple-500 text-white ml-auto' : 
                  type === 'system' ? 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white mx-auto text-center text-sm' :
                  'bg-white dark:bg-slate-700 text-gray-800 dark:text-white border border-gray-200 dark:border-slate-600');
-            div.textContent = text;
+            div.innerHTML = text;
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -326,13 +326,15 @@ HTML = '''
             <button onclick="toggleChat()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">✕</button>
         </div>
         <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
-            <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-center text-sm">
-                <strong>Natural Commands:</strong><br>
-                "Venkat gave 500" (credit)<br>
-                "Venkat paid 1000" (payment)<br>
-                "Venkat owes 200" (credit)<br>
-                "Venkat settled 500" (payment)<br><br>
-                <em>Or just type naturally!</em>
+            <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-sm">
+                <strong>💡 Quick Reference:</strong><br><br>
+                <span class="text-red-600 font-semibold">❌ CREDIT (they owe you):</span><br>
+                Use: <em>gave, owe, owed, lent, borrowed, took, debt, due</em><br>
+                Examples: "Venkat gave 500", "Venkat owes 200"<br><br>
+                <span class="text-green-600 font-semibold">✅ PAYMENT (they paid you):</span><br>
+                Use: <em>paid, received, got, returned, settled, cleared</em><br>
+                Examples: "Venkat paid 1000", "Venkat settled 500"<br><br>
+                <em>Format: [Name] [keyword] [amount]</em>
             </div>
         </div>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
@@ -1320,7 +1322,7 @@ def api_voice_command():
         conn.close()
         return jsonify({
             "success": False, 
-            "message": "🤷 Is this a credit (they owe you) or payment (they paid you)? Try: 'Venkat gave 500' or 'Venkat paid 1000'."
+            "message": "🤷 I need to know if this is credit or payment!<br><br>❌ CREDIT words: gave, owe, owed, lent, borrowed, took, debt, due<br>✅ PAYMENT words: paid, received, got, returned, settled, cleared<br><br>Example: 'Venkat gave 500' or 'Venkat paid 1000'"
         })
     
     conn.close()
