@@ -192,10 +192,10 @@ HTML = '''
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
-            recognition.maxAlternatives = 3;
+            recognition.maxAlternatives = 1;
             
             recognition.onstart = function() {
                 isListening = true;
@@ -207,15 +207,28 @@ HTML = '''
             };
             
             recognition.onresult = function(event) {
+                let interimTranscript = '';
                 let finalTranscript = '';
+                
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        finalTranscript = event.results[i][0].transcript;
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
+                
+                // Show interim results in the input
+                const input = document.getElementById('chatInput');
+                if (interimTranscript) {
+                    input.value = interimTranscript;
+                }
+                
+                // When we have final result, send it
                 if (finalTranscript) {
-                    document.getElementById('chatInput').value = finalTranscript;
-                    sendMessage();
+                    input.value = finalTranscript;
+                    recognition.stop();
+                    setTimeout(() => sendMessage(), 500);
                 }
             };
             
@@ -229,12 +242,16 @@ HTML = '''
                 
                 let errorMsg = 'Could not understand. Please try again.';
                 if (event.error === 'no-speech') {
-                    errorMsg = 'No speech detected. Please speak clearly.';
+                    errorMsg = 'No speech detected. Speak clearly into your microphone.';
                 } else if (event.error === 'audio-capture') {
-                    errorMsg = 'Microphone not found. Please check your device.';
+                    errorMsg = 'Microphone not found. Check your device settings.';
                 } else if (event.error === 'not-allowed') {
-                    errorMsg = 'Microphone access denied. Please allow microphone access.';
+                    errorMsg = 'Microphone access denied. Allow microphone access in browser settings.';
+                } else if (event.error === 'network') {
+                    errorMsg = 'Network error. Check your internet connection.';
                 }
+                
+                console.error('Speech recognition error:', event.error);
                 addMessage('system', '❌ ' + errorMsg);
             };
             
