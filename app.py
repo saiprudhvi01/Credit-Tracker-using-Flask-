@@ -409,13 +409,6 @@ ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Quick Entry</h2>
             <p class="text-gray-500 dark:text-gray-400 mt-1">Record credit or payment</p>
         </div>
-        
-        <div class="mb-4">
-            <button onclick="startVoiceInput()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                <span id="voiceIcon">🎤</span>
-                <span id="voiceText">Tap to Speak (e.g., "Ravi gave 500 credit")</span>
-            </button>
-        </div>
 
         <form method="POST" id="transactionForm">
             <div class="mb-4">
@@ -479,93 +472,6 @@ ADD_TRANSACTION_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <script>
 function setAmount(amount) {
     document.getElementById('amountInput').value = amount;
-}
-
-let recognition;
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    
-    recognition.onstart = function() {
-        document.getElementById('voiceIcon').textContent = '🔴';
-        document.getElementById('voiceText').textContent = 'Listening...';
-    };
-    
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        parseVoiceCommand(transcript);
-    };
-    
-    recognition.onend = function() {
-        document.getElementById('voiceIcon').textContent = '🎤';
-        document.getElementById('voiceText').textContent = 'Tap to Speak (e.g., "Ravi gave 500 credit")';
-    };
-    
-    recognition.onerror = function(event) {
-        document.getElementById('voiceIcon').textContent = '🎤';
-        document.getElementById('voiceText').textContent = 'Error: ' + event.error;
-    };
-}
-
-function startVoiceInput() {
-    if (recognition) {
-        recognition.start();
-    } else {
-        alert('Voice inputNot supported in this browser. Try Chrome.');
-    }
-}
-
-function parseVoiceCommand(text) {
-    const customerSelect = document.getElementById('customerSelect');
-    const amountInput = document.getElementById('amountInput');
-    const noteInput = document.getElementById('noteInput');
-    
-    let customerName = '';
-    let amount = '';
-    let type = '';
-    
-    const customers = Array.from(customerSelect.options).map(opt => opt.text.toLowerCase());
-    
-    for (const customer of customers) {
-        if (text.includes(customer.split(' (')[0])) {
-            customerName = customer.split(' (')[0];
-            break;
-        }
-    }
-    
-    const amountMatch = text.match(/(\d+)/);
-    if (amountMatch) {
-        amount = amountMatch[1];
-    }
-    
-    if (text.includes('credit') || text.includes('gave') || text.includes('owe')) {
-        type = 'credit';
-    } else if (text.includes('payment') || text.includes('paid') || text.includes('got')) {
-        type = 'payment';
-    }
-    
-    if (customerName) {
-        for (let i = 0; i < customerSelect.options.length; i++) {
-            if (customerSelect.options[i].text.toLowerCase().includes(customerName)) {
-                customerSelect.selectedIndex = i;
-                break;
-            }
-        }
-    }
-    
-    if (amount) {
-        amountInput.value = amount;
-    }
-    
-    if (type === 'credit') {
-        document.getElementById('creditType').checked = true;
-    } else if (type === 'payment') {
-        document.getElementById('paymentType').checked = true;
-    }
-    
-    noteInput.value = text;
 }
 </script>
 ''')
