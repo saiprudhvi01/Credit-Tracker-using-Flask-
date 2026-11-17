@@ -141,7 +141,8 @@ HTML = '''
                 </div>
             </div>
             <div class="flex gap-1 md:gap-2 bg-gray-100 dark:bg-slate-700 rounded-xl p-1">
-                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📊 Dashboard</a>
+                <a href="/dashboard" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/dashboard' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📊 Dashboard</a>
+                <a href="/" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">🏠 Home</a>
                 <a href="/customers" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">👥 Customers</a>
                 <a href="/gmail_setup" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white dark:bg-slate-600 shadow text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📧 Gmail</a>
                 <button onclick="toggleDarkMode()" class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
@@ -504,16 +505,21 @@ function sendReminder(customerId, email, amount) {
 
 CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100 dark:border-slate-700 fade-in">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">👥 Customers</h2>
-        <a href="/add_customer" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2">
-            ➕ Add Customer
-        </a>
+        <div class="flex gap-3 w-full md:w-auto">
+            <input type="text" id="searchInput" placeholder="🔍 Search customers..." 
+                class="flex-1 md:w-64 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
+                oninput="filterCustomers()">
+            <a href="/add_customer" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2 whitespace-nowrap">
+                ➕ Add Customer
+            </a>
+        </div>
     </div>
     {% if customers %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="customersGrid">
         {% for c in customers %}
-        <a href="/customer/{{ c.id }}" class="bg-gradient-to-br from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 p-5 rounded-xl border border-gray-100 dark:border-slate-600 card-hover">
+        <a href="/customer/{{ c.id }}" class="customer-card bg-gradient-to-br from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 p-5 rounded-xl border border-gray-100 dark:border-slate-600 card-hover" data-name="{{ c.name.lower() }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
@@ -534,6 +540,12 @@ CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
         </a>
         {% endfor %}
     </div>
+    <div id="noResults" class="hidden text-center py-12">
+        <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-4xl">🔍</span>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400">No customers found matching your search</p>
+    </div>
     {% else %}
     <div class="text-center py-12">
         <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -544,6 +556,31 @@ CUSTOMERS_HTML = HTML.replace('{% block content %}{% endblock %}', '''
     </div>
     {% endif %}
 </div>
+
+<script>
+function filterCustomers() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.customer-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        if (name.includes(search)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    const noResults = document.getElementById('noResults');
+    if (visibleCount === 0 && cards.length > 0) {
+        noResults.classList.remove('hidden');
+    } else {
+        noResults.classList.add('hidden');
+    }
+}
+</script>
 ''')
 
 ADD_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
@@ -556,6 +593,11 @@ ADD_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Add Customer</h2>
             <p class="text-gray-500 dark:text-gray-400 mt-1">Register a new customer</p>
         </div>
+        {% if error %}
+        <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6 text-center">
+            ⚠️ {{ error }}
+        </div>
+        {% endif %}
         <form method="POST">
             <div class="mb-5">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer Name</label>
@@ -794,6 +836,11 @@ EDIT_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Edit Customer</h2>
             <p class="text-gray-500 dark:text-gray-400 mt-1">Update customer details</p>
         </div>
+        {% if error %}
+        <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6 text-center">
+            ⚠️ {{ error }}
+        </div>
+        {% endif %}
         <form method="POST">
             <div class="mb-5">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">👤 Customer Name</label>
@@ -815,6 +862,110 @@ EDIT_CUSTOMER_HTML = HTML.replace('{% block content %}{% endblock %}', '''
             </button>
             <a href="/customer/{{ customer.id }}" class="block text-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium">❌ Cancel</a>
         </form>
+    </div>
+</div>
+''')
+
+DASHBOARD_HTML = HTML.replace('{% block content %}{% endblock %}', '''
+<div class="fade-in">
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">📊 Dashboard</h2>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 p-6 rounded-2xl border border-red-100 dark:border-red-800">
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">💰 Total to Receive</p>
+            <p class="text-3xl font-bold text-red-600">₹{{ total_pending }}</p>
+            <p class="text-xs text-red-500 mt-1">From {{ pending_customers }} customers</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 p-6 rounded-2xl border border-green-100 dark:border-green-800">
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">✅ Total Received</p>
+            <p class="text-3xl font-bold text-green-600">₹{{ total_received }}</p>
+            <p class="text-xs text-green-500 mt-1">This month</p>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 p-6 rounded-2xl border border-blue-100 dark:border-blue-800">
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">📈 This Month Khata</p>
+            <p class="text-3xl font-bold text-blue-600">₹{{ monthly_khata }}</p>
+            <p class="text-xs text-blue-500 mt-1">Credits added</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 rounded-2xl border border-purple-100 dark:border-purple-800">
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">👥 Total Customers</p>
+            <p class="text-3xl font-bold text-purple-600">{{ total_customers }}</p>
+            <p class="text-xs text-purple-500 mt-1">Active accounts</p>
+        </div>
+    </div>
+    
+    <!-- Weekly Stats -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-slate-700">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">📅 This Week</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                    <span class="text-gray-700 dark:text-gray-300">Credits Given</span>
+                    <span class="font-bold text-red-600">₹{{ weekly_credits }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                    <span class="text-gray-700 dark:text-gray-300">Payments Received</span>
+                    <span class="font-bold text-green-600">₹{{ weekly_payments }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <span class="text-gray-700 dark:text-gray-300">Net Change</span>
+                    <span class="font-bold {% if weekly_net > 0 %}text-red-600{% elif weekly_net < 0 %}text-green-600{% else %}text-gray-600{% endif %}">₹{{ weekly_net }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-slate-700">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">⚠️ High Pending</h3>
+            {% if high_pending %}
+            <div class="space-y-3">
+                {% for c in high_pending %}
+                <a href="/customer/{{ c.id }}" class="block p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl border border-orange-100 dark:border-orange-800 hover:shadow-md transition-all">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-gray-800 dark:text-white">{{ c.name }}</span>
+                        <span class="font-bold text-red-600">₹{{ c.pending }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 dark:text-gray-400 text-center py-4">No high pending amounts</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-slate-700">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">📋 Recent Transactions</h3>
+            <a href="/" class="text-purple-600 dark:text-purple-400 text-sm font-medium hover:underline">View All</a>
+        </div>
+        {% if recent_transactions %}
+        <div class="space-y-3">
+            {% for t in recent_transactions %}
+            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white dark:from-slate-700 dark:to-slate-800 rounded-xl border border-gray-100 dark:border-slate-600">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 {% if t.type == 'credit' %}bg-red-100{% else %}bg-green-100{% endif %} rounded-xl flex items-center justify-center">
+                        <span class="text-xl">{% if t.type == 'credit' %}➖{% else %}➕{% endif %}</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-800 dark:text-white">{{ t.customer_name }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t.date }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold {% if t.type == 'credit' %}text-red-600{% else %}text-green-600{% endif %}">
+                        {% if t.type == 'credit' %}-{% else %}+{% endif %}₹{{ t.amount }}
+                    </p>
+                    <span class="text-xs {% if t.type == 'credit' %}text-red-500{% else %}text-green-500{% endif %}">
+                        {% if t.type == 'credit' %}CREDIT{% else %}PAYMENT{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 dark:text-gray-400 text-center py-8">No transactions yet</p>
+        {% endif %}
     </div>
 </div>
 ''')
@@ -876,6 +1027,111 @@ def home():
     )
 
 
+@app.route("/dashboard")
+def dashboard():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    user_id = session["user_id"]
+    
+    # Total customers
+    total_customers = conn.execute(
+        "SELECT COUNT(*) FROM customers WHERE user_id = ?", (user_id,)
+    ).fetchone()[0]
+    
+    # Total pending (credits - payments)
+    total_pending = conn.execute("""
+        SELECT COALESCE(SUM(
+            (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'credit') -
+            (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'payment')
+        ), 0)
+        FROM customers c WHERE c.user_id = ?
+    """, (user_id,)).fetchone()[0]
+    
+    # Customers with pending amounts
+    pending_customers = conn.execute("""
+        SELECT COUNT(*) FROM customers c WHERE c.user_id = ? AND
+        (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'credit') -
+        (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'payment') > 0
+    """, (user_id,)).fetchone()[0]
+    
+    # Total received this month (payments)
+    current_month = datetime.now().strftime("%Y-%m")
+    total_received = conn.execute("""
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        JOIN customers c ON t.customer_id = c.id
+        WHERE c.user_id = ? AND t.type = 'payment' AND strftime('%Y-%m', t.date) = ?
+    """, (user_id, current_month)).fetchone()[0]
+    
+    # Monthly khata (credits this month)
+    monthly_khata = conn.execute("""
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        JOIN customers c ON t.customer_id = c.id
+        WHERE c.user_id = ? AND t.type = 'credit' AND strftime('%Y-%m', t.date) = ?
+    """, (user_id, current_month)).fetchone()[0]
+    
+    # Weekly stats
+    from datetime import timedelta
+    week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    weekly_credits = conn.execute("""
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        JOIN customers c ON t.customer_id = c.id
+        WHERE c.user_id = ? AND t.type = 'credit' AND date(t.date) >= ?
+    """, (user_id, week_ago)).fetchone()[0]
+    
+    weekly_payments = conn.execute("""
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        JOIN customers c ON t.customer_id = c.id
+        WHERE c.user_id = ? AND t.type = 'payment' AND date(t.date) >= ?
+    """, (user_id, week_ago)).fetchone()[0]
+    
+    weekly_net = weekly_credits - weekly_payments
+    
+    # High pending customers (pending > 5000)
+    high_pending = conn.execute("""
+        SELECT c.id, c.name,
+               (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'credit') -
+               (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'payment') as pending
+        FROM customers c
+        WHERE c.user_id = ?
+        AND (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'credit') -
+            (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_id = c.id AND type = 'payment') > 5000
+        ORDER BY pending DESC
+        LIMIT 5
+    """, (user_id,)).fetchall()
+    
+    # Recent transactions
+    recent_transactions = conn.execute("""
+        SELECT t.*, c.name as customer_name
+        FROM transactions t
+        JOIN customers c ON t.customer_id = c.id
+        WHERE c.user_id = ?
+        ORDER BY t.id DESC
+        LIMIT 10
+    """, (user_id,)).fetchall()
+    
+    conn.close()
+    
+    return render_template_string(
+        DASHBOARD_HTML,
+        total_customers=total_customers,
+        total_pending=int(total_pending),
+        pending_customers=pending_customers,
+        total_received=int(total_received),
+        monthly_khata=int(monthly_khata),
+        weekly_credits=int(weekly_credits),
+        weekly_payments=int(weekly_payments),
+        weekly_net=int(weekly_net),
+        high_pending=high_pending,
+        recent_transactions=recent_transactions
+    )
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -930,22 +1186,33 @@ def add_customer():
     if "user_id" not in session:
         return redirect(url_for("login"))
     
+    error = None
     if request.method == "POST":
         name = request.form["name"].strip()
         phone = request.form.get("phone", "").strip() or None
         email = request.form.get("email", "").strip() or None
         
         conn = get_db()
-        conn.execute(
-            "INSERT INTO customers (name, phone, email, user_id) VALUES (?, ?, ?, ?)",
-            (name, phone, email, session["user_id"])
-        )
-        conn.commit()
-        conn.close()
+        # Check for duplicate name
+        existing = conn.execute(
+            "SELECT id FROM customers WHERE LOWER(name) = LOWER(?) AND user_id = ?",
+            (name, session["user_id"])
+        ).fetchone()
         
-        return redirect(url_for("customers"))
+        if existing:
+            error = "Customer with this name already exists!"
+        else:
+            conn.execute(
+                "INSERT INTO customers (name, phone, email, user_id) VALUES (?, ?, ?, ?)",
+                (name, phone, email, session["user_id"])
+            )
+            conn.commit()
+            conn.close()
+            return redirect(url_for("customers"))
+        
+        conn.close()
     
-    return render_template_string(ADD_CUSTOMER_HTML)
+    return render_template_string(ADD_CUSTOMER_HTML, error=error)
 
 
 @app.route("/add_transaction", methods=["GET", "POST"])
@@ -1039,22 +1306,31 @@ def edit_customer(customer_id):
         conn.close()
         return "Customer not found", 404
     
+    error = None
     if request.method == "POST":
         name = request.form["name"].strip()
         phone = request.form.get("phone", "").strip() or None
         email = request.form.get("email", "").strip() or None
         
-        conn.execute(
-            "UPDATE customers SET name = ?, phone = ?, email = ? WHERE id = ?",
-            (name, phone, email, customer_id)
-        )
-        conn.commit()
-        conn.close()
+        # Check for duplicate name (excluding current customer)
+        existing = conn.execute(
+            "SELECT id FROM customers WHERE LOWER(name) = LOWER(?) AND user_id = ? AND id != ?",
+            (name, session["user_id"], customer_id)
+        ).fetchone()
         
-        return redirect(url_for("customer_detail", customer_id=customer_id))
+        if existing:
+            error = "Customer with this name already exists!"
+        else:
+            conn.execute(
+                "UPDATE customers SET name = ?, phone = ?, email = ? WHERE id = ?",
+                (name, phone, email, customer_id)
+            )
+            conn.commit()
+            conn.close()
+            return redirect(url_for("customer_detail", customer_id=customer_id))
     
     conn.close()
-    return render_template_string(EDIT_CUSTOMER_HTML, customer=customer)
+    return render_template_string(EDIT_CUSTOMER_HTML, customer=customer, error=error)
 
 
 @app.route("/send_reminder", methods=["POST"])
