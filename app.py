@@ -975,6 +975,59 @@ def oauth2callback():
         return f"Google authorization failed: {str(e)}", 400
 
 
+# API endpoints for Voice Assistant
+@app.route("/api/customers")
+def api_customers():
+    if "user_id" not in session:
+        return jsonify([])
+    
+    conn = get_db()
+    customers = conn.execute(
+        "SELECT id, name FROM customers WHERE user_id = ? ORDER BY name",
+        (session["user_id"],)
+    ).fetchall()
+    conn.close()
+    
+    return jsonify([{"id": c["id"], "name": c["name"]} for c in customers])
+
+
+@app.route("/api/transaction", methods=["POST"])
+def api_add_transaction():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Not logged in"})
+    
+    data = request.get_json()
+    customer_id = data.get("customer_id")
+    trans_type = data.get("type")
+    amount = float(data.get("amount", 0))
+    note = data.get("note")
+    
+    if not customer_id or not trans_type or not amount:
+        return jsonify({"success": False, "message": "Missing required fields"})
+    
+    conn = get_db()
+    
+    # Verify customer belongs to user
+    customer = conn.execute(
+        "SELECT id FROM customers WHERE id = ? AND user_id = ?",
+        (customer_id, session["user_id"])
+    ).fetchone()
+    
+    if not customer:
+        conn.close()
+        return jsonify({"success": False, "message": "Customer not found"})
+    
+    date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    conn.execute(
+        "INSERT INTO transactions (customer_id, amount, type, note, date) VALUES (?, ?, ?, ?, ?)",
+        (customer_id, amount, trans_type, note, date)
+    )
+    conn.commit()
+    conn.close()
+    
+    return jsonify({"success": True, "message": "Transaction added successfully"})
+
+
 if __name__ == "__main__":
     init_db()
     app.run(port=5000, debug=True)
