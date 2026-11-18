@@ -7,9 +7,9 @@ A local web app for managing customers, recording credit and payments, checking 
 - **Language:** Python 3.8+
 - **Web framework:** Flask 3 with Jinja2 templates and Werkzeug password-hashing utilities
 - **Database:** SQLite; the database file is created automatically when the app starts
-- **Frontend:** HTML, Tailwind CSS via CDN, and JavaScript
+- **Frontend:** HTML, Tailwind CSS via CDN, and JavaScript with Web Speech API for voice input
 - **Gmail integration:** Gmail API with Google OAuth 2.0 (`google-auth`, `google-auth-oauthlib`, and `google-api-python-client`)
-- **Optional standalone voice assistant:** SpeechRecognition, PyAudio, and Requests. The web interface also has browser-based voice input.
+- **Optional standalone voice assistant:** SpeechRecognition, PyAudio, and Requests
 
 ## Project Structure
 
@@ -88,12 +88,20 @@ To use a different Flask session secret, set the `FLASK_SECRET_KEY` environment 
 
 The customer page can send a reminder email manually when Gmail is connected and the customer has an email address. Automatic/scheduled reminders are not implemented.
 
-## Standalone Voice Assistant (Optional)
+## Voice Assistant
 
-Start the web app first, then in a second terminal run:
+The web interface includes **built-in voice input** using your browser's Web Speech API. No additional setup is needed - just click the "🎤 Voice" button in the chat widget after logging in.
+
+**Standalone Voice Assistant (Optional):**
+
+If you prefer terminal-based voice commands, you can run the standalone script:
 
 ```bash
+# Terminal 1: Start the web app
+python app.py
+
+# Terminal 2: Run the standalone voice assistant
 python voice_assistant.py
 ```
 
-This script uses the microphone and connects to the app at `http://localhost:5000`.
+This uses your microphone and connects to the app at `http://localhost:5000`. Requires `SpeechRecognition` and `PyAudio` packages (already in requirements.txt).
