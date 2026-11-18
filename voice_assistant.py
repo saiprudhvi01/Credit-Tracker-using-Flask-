@@ -14,12 +14,14 @@ class VoiceAssistant:
         self.base_url = base_url
         self.listening = False
         self.recognition = None
+        self.speech_recognition = None
         self.session = requests.Session()
         
     def setup_recognition(self):
         """Setup speech recognition"""
         try:
             import speech_recognition as sr
+            self.speech_recognition = sr
             self.recognition = sr.Recognizer()
             self.microphone = sr.Microphone()
             print("✅ Voice recognition initialized")
@@ -46,12 +48,12 @@ class VoiceAssistant:
             print(f"🗣️ Heard: '{text}'")
             return text
             
-        except sr.WaitTimeoutError:
+        except self.speech_recognition.WaitTimeoutError:
             return None
-        except sr.UnknownValueError:
+        except self.speech_recognition.UnknownValueError:
             print("❌ Could not understand audio")
             return None
-        except sr.RequestError as e:
+        except self.speech_recognition.RequestError as e:
             print(f"❌ Speech recognition error: {e}")
             return None
         except Exception as e:

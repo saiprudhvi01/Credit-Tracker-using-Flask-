@@ -1,96 +1,39 @@
-# AI Development Log
+# AI Assistance and Development Log
 
-## AI Tools Used
+This log records AI assistance used during development and follow-up maintenance. AI output is treated as implementation assistance; the project owner is responsible for reviewing the final code and behavior.
 
-1. **Cascade (Claude-powered AI assistant)** - Primary coding assistant for building the entire application
-   - Used for: Architecture decisions, code implementation, debugging, UI design
-   - Platform: IDE integration
+## Tools Used
 
-## Key AI Conversations
+- **Cascade (Claude-powered assistant):** Used during the initial application build for implementation ideas, debugging, and interface work, as recorded in the original development notes.
+- **Codex:** Used for follow-up review and changes to settings, dashboard summaries, Gmail account handling, dependency documentation, and this log.
 
-### Conversation 1: OAuth PKCE Fix
-**Context**: The Gmail OAuth integration was failing with "Missing code verifier" error.
+## Initial Development
 
-**Problem**: The Flow object couldn't be pickled to preserve the PKCE code verifier between authorization and callback routes.
+AI assistance contributed to the Flask and SQLite application, its Jinja templates, customer and transaction screens, dashboard, login flow, and Gmail integration. The project uses Flask-rendered templates and Tailwind CSS via CDN to keep local setup simple.
 
-**AI's initial approach**: Try to pickle the Flow object and store it in the session.
-**Result**: Failed with `AttributeError: Can't pickle local object 'OAuth2Session.__init__.<locals>.<lambda>'`
+The owner chose SQLite for local data storage and Flask/Jinja templates rather than a separate JavaScript frontend framework.
 
-**AI's second approach**: Disable PKCE by setting `code_verifier=None`.
-**Result**: Still failed with the same error.
+## OAuth Debugging Notes
 
-**Final solution (provided by user)**: Store the Flow object in server memory (`oauth_flows = {}` dictionary) using the state as key, and retrieve it in the callback. This avoids session cookie issues and pickling problems.
+During local Gmail OAuth development, the authorization state and PKCE code verifier were not reliably available in the callback when the app was accessed through different local hostnames. Attempts to store or pickle the OAuth `Flow` object in the browser session failed; the object contains non-picklable state.
 
-**Key prompt from user**:
-```
-Let's fix this more reliably for your local testing.
-Step 1. Add this near the top of app.py
-oauth_flows = {}
+The local-development workaround stores each pending flow in a server-memory dictionary keyed by OAuth state, then retrieves it in the callback. This supports a single running app process. Restarting the process or routing the callback to a different worker loses the pending flow, so a deployed multi-worker app should use shared server-side state storage.
 
-Step 2. Replace your /authorize function
-...
+## Follow-up Changes
 
-Step 3. Replace your /oauth2callback function
-...
-```
+- Removed reminder threshold settings because no automatic reminder scheduler used them. Manual reminders sent from a customer page remain available.
+- Changed dashboard credit and payment summaries from a rolling seven-day period to the current calendar month.
+- Updated Gmail setup to show the connected Google account and let an app user switch accounts. OAuth tokens are stored per app user so one user's Gmail connection does not replace another's.
+- Added `OAUTH_REDIRECT_URI` configuration for deployments that use a public HTTPS callback. The default remains the local development callback.
+- Added a demo sender account and copy controls to the Gmail setup page for testing, at the owner's request. The demo credentials are intentionally not repeated in this log.
+- Declared directly imported `google-auth` and Werkzeug dependencies in `requirements.txt` and corrected the documented minimum Python version to match Flask 3.
+- Reorganized the Flask app into a package with an application factory, configuration, shared database/password helpers, feature-based blueprints, and package-local templates. Updated the seed script to use the shared database setup.
+- Replaced new password hashes with Werkzeug's password-hashing helpers and added successful-login migration for existing SHA-256 hashes.
+- Added a confirmed customer deletion action that also removes the customer's transaction history.
 
-### Conversation 2: Building the Full Application
-**Context**: Transitioning from a simple Gmail test to the full Shop Credit Tracker application.
+## Deployment and Review Notes
 
-**Key prompt from user**:
-```
-do this one
-here for alerts i have kept gmail make sure those endpoints are correct otherwise i will get error
-and make sure the ui is dynamic and easy to use and navigate
-and keep a loading page also
-and make sure write clean code
-dont make it too complex write simple code with less number of lines and good approach
-```
-
-**AI's approach**:
-- Built a complete Flask app with SQLite database
-- Created mobile-friendly UI using Tailwind CSS
-- Integrated the existing Gmail OAuth endpoints
-- Added login system with session management
-- Implemented customer and transaction management
-- Added loading page with spinner animation
-
-## Times AI Was Wrong or Gave Poor Results
-
-### 1. OAuth Session Storage Approach
-**What happened**: AI tried to use Flask session to store OAuth state and code verifier.
-
-**How I noticed**: The application kept failing with `KeyError: 'state'` when the callback was called, because the browser wasn't preserving session cookies between localhost and 127.0.0.1.
-
-**How I fixed it**: User provided the solution to use server-side dictionary storage instead of session cookies. This was more reliable for local development.
-
-### 2. Pickling the Flow Object
-**What happened**: AI attempted to pickle the Flow object to preserve PKCE verifier.
-
-**How I noticed**: Got error `AttributeError: Can't pickle local object 'OAuth2Session.__init__.<locals>.<lambda>'` when trying to run the app.
-
-**How I fixed it**: Abandoned the pickling approach and used the in-memory dictionary solution provided by the user.
-
-## Decision Where I Disagreed with AI
-
-### UI Framework Choice
-**AI's suggestion**: Could have used a more complex frontend framework like React or Vue.js with a separate build process.
-
-**My decision**: Chose to use Tailwind CSS via CDN with simple Jinja2 templates in Flask.
-
-**Why I disagreed**:
-- The requirement was for a simple, easy-to-use app that Ravi can run locally
-- React/Vue would add complexity with build tools, npm, and deployment
-- Tailwind via CDN gives a modern UI without the overhead
-- Single-file Python app is easier for Ravi to understand and modify if needed
-- Faster development time, which aligns with the "keep it simple" requirement
-
-## Summary
-
-The AI was very helpful for:
-- Rapid prototyping of the application structure
-- Writing clean, readable code
-- Implementing the database schema and queries
-- Creating a mobile-responsive UI with Tailwind CSS
-
-The main challenges were around OAuth integration, which required user guidance to solve correctly. The AI's initial approaches were reasonable but didn't account for the specific constraints of local development with OAuth.
+- Google Cloud controls which accounts may authorize Gmail. External audience alone does not make an app available to everyone: the OAuth app must be published, and public use of the sensitive `gmail.send` scope requires Google's verification. The project owner must complete these steps in Google Cloud Console.
+- For deployment, set `OAUTH_REDIRECT_URI` to the public HTTPS callback and register the exact same URI in the Google OAuth client.
+- The demo Gmail credentials are displayed in the Gmail setup page for testing. Use a disposable test account and rotate its password after review; do not use a personal or production account for this purpose.
+- Dependency declarations were reviewed against Python imports. A clean-environment installation has not been performed as part of this log update.

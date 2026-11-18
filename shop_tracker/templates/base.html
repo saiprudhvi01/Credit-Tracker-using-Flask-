@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shop Credit Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-card { background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); }
+        .dark .stat-card { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
+        .dark .bg-white { background-color: #1e293b !important; }
+        .dark .bg-gray-50 { background-color: #0f172a !important; }
+        .dark .bg-gray-100 { background-color: #334155 !important; }
+        .dark .text-gray-800 { color: #f1f5f9 !important; }
+        .dark .text-gray-500 { color: #94a3b8 !important; }
+        .dark .text-gray-600 { color: #cbd5e1 !important; }
+        .dark .text-gray-700 { color: #e2e8f0 !important; }
+        .dark .border-gray-100 { border-color: #334155 !important; }
+        .dark .border-gray-200 { border-color: #475569 !important; }
+        .dark .from-gray-50 { --tw-gradient-from: #0f172a !important; }
+        .dark .to-white { --tw-gradient-to: #1e293b !important; }
+        .chat-bubble { animation: bubbleIn 0.3s ease-out; }
+        @keyframes bubbleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .pulse-ring { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 min-h-screen transition-colors duration-300">
+    <div id="loading" class="fixed inset-0 bg-white dark:bg-slate-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="relative">
+                <div class="animate-spin rounded-full h-20 w-20 border-4 border-purple-200"></div>
+                <div class="animate-spin rounded-full h-20 w-20 border-4 border-purple-600 border-t-transparent absolute top-0 left-0"></div>
+            </div>
+            <p class="mt-6 text-gray-600 dark:text-gray-400 font-medium">Loading your shop...</p>
+        </div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        {% if session.user_id %}
+        <nav class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg rounded-2xl shadow-lg border border-white/60 dark:border-slate-700 p-4 md:px-6 md:py-4 mb-6 flex flex-col lg:flex-row justify-between items-center gap-4 fade-in">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center shadow-md shadow-purple-500/20">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Ravi's Shop</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Credit Tracker</p>
+                </div>
+            </div>
+            <div class="w-full lg:w-auto flex flex-wrap justify-center gap-1.5 bg-gray-100/80 dark:bg-slate-700/80 rounded-2xl p-1.5">
+                <a href="/dashboard" class="px-3 py-2 rounded-xl text-sm font-medium transition-all {% if request.path == '/dashboard' %}bg-white dark:bg-slate-600 shadow-sm text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📊 Dashboard</a>
+                <a href="/customers" class="px-3 py-2 rounded-xl text-sm font-medium transition-all {% if request.path == '/customers' %}bg-white dark:bg-slate-600 shadow-sm text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">👥 Customers</a>
+                <a href="/settings" class="px-3 py-2 rounded-xl text-sm font-medium transition-all {% if request.path == '/settings' %}bg-white dark:bg-slate-600 shadow-sm text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">⚙️ Settings</a>
+                <a href="/gmail_setup" class="px-3 py-2 rounded-xl text-sm font-medium transition-all {% if request.path == '/gmail_setup' %}bg-white dark:bg-slate-600 shadow-sm text-purple-600{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">📧 Gmail</a>
+                <button onclick="toggleDarkMode()" class="px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                    🌙/☀️
+                </button>
+                <button onclick="toggleChat()" class="px-3 py-2 rounded-xl text-sm font-medium transition-all bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90">
+                    🎤 Voice
+                </button>
+                <a href="/logout" class="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all">🚪 Logout</a>
+            </div>
+        </nav>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+        setTimeout(() => {
+            const loading = document.getElementById('loading');
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => loading.style.display = 'none', 300);
+        }, 600);
+        
+        function toggleChat() {
+            const chat = document.getElementById('voiceChat');
+            chat.classList.toggle('hidden');
+            if (!chat.classList.contains('hidden')) {
+                const input = document.getElementById('chatInput');
+                input.focus();
+                // Remove existing listener if any
+                input.removeEventListener('keypress', handleKeyPress);
+                // Add new listener
+                input.addEventListener('keypress', handleKeyPress);
+            }
+        }
+        
+        let recognition;
+        let isListening = false;
+        let speechSupported = false;
+        
+        // Check if speech recognition is supported
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            speechSupported = true;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                isListening = true;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.add('animate-pulse');
+                    btn.innerHTML = '🔴';
+                }
+                addMessage('system', '🎤 Listening... Speak now');
+            };
+            
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    document.getElementById('chatInput').value = finalTranscript;
+                    sendMessage();
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                isListening = false;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.remove('animate-pulse');
+                    btn.innerHTML = '🎤';
+                }
+                
+                let errorMsg = 'Could not understand. Please try again.';
+                if (event.error === 'no-speech') {
+                    errorMsg = 'No speech detected. Speak clearly into your microphone.';
+                } else if (event.error === 'audio-capture') {
+                    errorMsg = 'Microphone not found. Check your device settings.';
+                } else if (event.error === 'not-allowed') {
+                    errorMsg = 'Microphone access denied. Allow microphone access in browser settings.';
+                } else if (event.error === 'network') {
+                    errorMsg = 'Network error. Voice recognition requires internet connection.';
+                } else if (event.error === 'aborted') {
+                    errorMsg = 'Recording was stopped.';
+                }
+                
+                console.error('Speech recognition error:', event.error, event.message);
+                addMessage('system', '❌ ' + errorMsg);
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                const btn = document.querySelector('[onclick="startVoiceInput()"]');
+                if (btn) {
+                    btn.classList.remove('animate-pulse');
+                    btn.innerHTML = '🎤';
+                }
+            };
+        } else {
+            console.log('Speech recognition not supported in this browser');
+        }
+        
+        function startVoiceInput() {
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+            
+            if (!speechSupported) {
+                alert('Voice input is not supported in this browser. Please use Chrome or Edge, or type your command instead.');
+                return;
+            }
+            
+            if (recognition) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Error starting recognition:', e);
+                    addMessage('system', '❌ Error starting microphone. Please try typing instead.');
+                }
+            } else {
+                addMessage('system', '❌ Voice recognition not available. Please type your command.');
+            }
+        }
+        
+        function addMessage(type, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-bubble whitespace-pre-line p-3 rounded-lg mb-2 max-w-[90%] break-words ' + 
+                (type === 'user' ? 'bg-purple-500 text-white ml-auto' : 
+                 type === 'system' ? 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white mx-auto text-center text-sm' :
+                 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white border border-gray-200 dark:border-slate-600');
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            addMessage('user', text);
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/voice-command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: text })
+                });
+                const data = await response.json();
+                addMessage('bot', data.message);
+            } catch (error) {
+                addMessage('bot', 'Error processing command');
+            }
+        }
+        
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+    
+    <div id="voiceChat" class="hidden fixed bottom-6 right-6 w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 z-40">
+        <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800 dark:text-white">🎤 Voice Assistant</h3>
+            <button onclick="toggleChat()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">✕</button>
+        </div>
+        <div id="chatMessages" class="h-64 overflow-y-auto p-4 space-y-2">
+            <div class="chat-bubble bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white p-3 rounded-lg text-sm">
+                <strong>💡 Simple Format:</strong><br><br>
+                <span class="text-red-600 font-semibold">➕ PLUS (khata increased):</span><br>
+                Customer owes more money<br>
+                Example: "Venkat + 500"<br><br>
+                <span class="text-green-600 font-semibold">➖ MINUS (khata decreased):</span><br>
+                Customer paid money<br>
+                Example: "Venkat - 1000"<br><br>
+                <em>Format: [Name] [+/-] [amount]</em>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-slate-700 flex gap-2">
+            <button onclick="startVoiceInput()" class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-all pulse-ring">
+                🎤
+            </button>
+            <input type="text" id="chatInput" placeholder="e.g., Venkat + 500 or Venkat - 1000" onkeypress="if(event.key==='Enter')sendMessage()"
+                class="flex-1 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
+            <button onclick="sendMessage()" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 transition-all">
+                Send
+            </button>
+        </div>
+    </div>
+</body>
+</html>

@@ -30,6 +30,7 @@ wheels/
 
 # OAuth tokens
 token.json
+gmail_tokens/
 credentials.json
 
 # IDE

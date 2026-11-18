@@ -1,116 +1,99 @@
 # Shop Credit Tracker
 
-## The Problem
+A local web app for managing customers, recording credit and payments, checking outstanding balances, and sending payment reminder emails manually through Gmail.
 
-Ravi runs a small grocery shop in Hyderabad and gives goods on credit (khata) to about 80 regular customers. He currently tracks everything in a paper notebook, which causes several problems:
+## Tech Stack
 
-- **Forgetfulness**: He forgets who owes him how much, sometimes losing money completely
-- **No proof**: Customers argue "I paid you last week!" but Ravi has no documentation
-- **Awkward reminders**: Asking people to pay is uncomfortable, so he delays reminders and customers delay payments
-- **No visibility**: At month-end, he doesn't know how much money is stuck with customers
+- **Language:** Python 3.8+
+- **Web framework:** Flask 3 with Jinja2 templates and Werkzeug password-hashing utilities
+- **Database:** SQLite; the database file is created automatically when the app starts
+- **Frontend:** HTML, Tailwind CSS via CDN, and JavaScript
+- **Gmail integration:** Gmail API with Google OAuth 2.0 (`google-auth`, `google-auth-oauthlib`, and `google-api-python-client`)
+- **Optional standalone voice assistant:** SpeechRecognition, PyAudio, and Requests. The web interface also has browser-based voice input.
 
-**Target users**: Small shop owners like Ravi who need a simple way to track customer credits and send payment reminders.
+## Project Structure
 
-## What I Built
+```text
+app.py                  Application entry point
+shop_tracker/
+  __init__.py            Flask app factory and blueprint registration
+  config.py              Environment-based configuration
+  db.py                  SQLite connection and schema setup
+  security.py             Password hashing and legacy-hash verification
+  gmail_service.py        Gmail OAuth credential helpers
+  routes/                 Feature-based Flask blueprints
+  templates/              Jinja page templates
+seed_data.py              Optional demo-data loader
+voice_assistant.py        Optional standalone voice assistant
+requirements.txt          Python dependencies
+```
 
-A web application that solves Ravi's core problems:
+## Run Locally
 
-1. **Customer Management**: Add and manage customers with name, phone, and email
-2. **Credit Tracking**: Record credits (goods given on credit) and payments received
-3. **Dashboard**: Shows total customers, total pending amount, and recent transactions
-4. **Payment Reminders**: Send automated email reminders to customers via Gmail integration
-5. **Customer Detail View**: See full transaction history and pending balance for each customer
-6. **Login System**: Simple username/password authentication to keep Ravi's data private
+### 1. Install Python dependencies
 
-### What I Deliberately Left Out
+Use Python 3.8 or newer. From the project folder, create and activate a virtual environment:
 
-- **SMS reminders**: Could be useful but adds complexity and cost
-- **Reporting/analytics**: Monthly reports, charts, and trends are nice-to-have but not essential
-- **Multi-user support**: Single shop owner is the target user
-- **Payment processing**: Recording payments is enough; actual payment gateway integration is overkill
-- **Mobile app**: Web app works on mobile browsers, which is sufficient
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-## Assumptions and Key Product Decisions
+On macOS or Linux, activate the environment with:
 
-1. **Simple English**: Ravi reads simple English, so the UI uses straightforward language
-2. **Mobile-first**: Ravi uses a smartphone, so the UI is optimized for phone-sized screens
-3. **Fast data entry**: Adding a transaction takes seconds while a customer is at the counter
-4. **Email is optional**: Not all customers have email, so reminders only work for those who do
-5. **Single user**: One shop owner per installation - no multi-tenant complexity
-6. **Local deployment**: Runs on Ravi's computer, no hosting needed
+```bash
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-## Tech Stack and Why I Chose It
+PyAudio may need operating-system audio development libraries on some platforms. It is used by the optional standalone voice assistant.
 
-- **Backend**: Flask (Python)
-  - Simple, lightweight, perfect for small applications
-  - Easy to understand and modify
-  - Built-in session management for login
+### 2. (Optional) Load demo data
 
-- **Database**: SQLite
-  - No separate database server needed
-  - File-based, easy to backup
-  - Sufficient for 80 customers and their transactions
+```bash
+python seed_data.py
+```
 
-- **Frontend**: Tailwind CSS (via CDN)
-  - Mobile-responsive out of the box
-  - Clean, modern UI without writing custom CSS
-  - Fast development with utility classes
+This creates the demo login `ravi` / `ravi123` and sample customers. **Running the seed script clears existing users, customers, and transactions in `shop_tracker.db`.** Skip this step if you want to preserve existing data.
 
-- **Email**: Gmail API with OAuth
-  - Free, reliable email delivery
-  - OAuth keeps credentials secure
-  - Ravi likely already has a Gmail account
+Without seeded data, the app has no user-registration page; create a user in the database before logging in.
 
-## How to Run Locally
+### 3. Start the app
 
-### Prerequisites
-- Python 3.7 or higher
-- pip (Python package manager)
+```bash
+python app.py
+```
 
-### Step-by-Step Setup (under 10 minutes)
+The app initializes its SQLite tables on startup. Open [http://localhost:5000](http://localhost:5000) and sign in with the demo login if you seeded the database.
 
-1. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Gmail Setup (Optional)
 
-2. **Set up Gmail credentials**
-   - Go to Google Cloud Console
-   - Create a project and enable Gmail API
-   - Create OAuth 2.0 credentials (Web application)
-   - Add `http://localhost:5000/oauth2callback` to authorized redirect URIs
-   - Download credentials JSON and save as `credentials.json` in the project folder
+Gmail is only needed to send manual reminders. The app can run without connecting Gmail.
 
-3. **Seed sample data (optional)**
-   ```bash
-   python seed_data.py
-   ```
-   This creates a demo user: username `ravi`, password `ravi123`
+1. In Google Cloud Console, create a project, enable the Gmail API, and configure Google Auth Platform.
+2. Create an OAuth client ID for a **Web application**.
+3. Add this authorized redirect URI to the OAuth client: `http://localhost:5000/oauth2callback`.
+4. Download the OAuth client JSON file and save it in the project folder as `credentials.json`.
+5. While the OAuth app is in Testing, add each Google account that will authorize it under **Audience → Test users**.
+6. Run the app, sign in, open **Gmail**, and connect the desired Google account.
 
-4. **Run the application**
-   ```bash
-   python app.py
-   ```
+The default callback is for local use. For a hosted deployment, set `OAUTH_REDIRECT_URI` to the public HTTPS callback URL and register the exact same URL in Google Cloud Console. Apps offered publicly with the `gmail.send` scope must complete Google's OAuth verification. External audience alone does not make an app available to all Google accounts.
 
-5. **Open in browser**
-   - Go to `http://localhost:5000`
-   - Login with `ravi` / `ravi123` (if you seeded data)
-   - Or create a new account by registering (you'll need to add a registration route or manually insert into database)
+To use a different Flask session secret, set the `FLASK_SECRET_KEY` environment variable before starting the app. Do not use the built-in development fallback for a public deployment.
 
-6. **Connect Gmail (for reminders)**
-   - Click "Gmail Setup" in the nav
-   - Click "Connect Gmail"
-   - Authorize with your Google account
+## Reminders
 
-## What I Would Build Next With One More Week
+The customer page can send a reminder email manually when Gmail is connected and the customer has an email address. Automatic/scheduled reminders are not implemented.
 
-1. **Registration page**: Allow new users to sign up without manual database insertion
-2. **Edit/Delete**: Allow editing customer details and deleting incorrect transactions
-3. **Monthly report**: Simple summary of credits and payments per month
-4. **Bulk reminders**: Send reminders to all customers with pending amounts
-5. **Search**: Quick search for customers by name or phone
-6. **Export**: Download customer list or transaction history as CSV
+## Standalone Voice Assistant (Optional)
 
-## Time Spent
+Start the web app first, then in a second terminal run:
 
-Approximately 4-5 hours of development time.
+```bash
+python voice_assistant.py
+```
+
+This script uses the microphone and connects to the app at `http://localhost:5000`.
