@@ -24,9 +24,14 @@ def get_credentials(user_id):
 
     credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
     if credentials.expired and credentials.refresh_token:
-        credentials.refresh(Request())
-        with open(token_file, "w", encoding="utf-8") as token:
-            token.write(credentials.to_json())
+        try:
+            credentials.refresh(Request())
+            with open(token_file, "w", encoding="utf-8") as token:
+                token.write(credentials.to_json())
+        except Exception:
+            # Token refresh failed - delete the invalid token
+            os.remove(token_file)
+            return None
 
     return credentials if credentials.valid else None
 
